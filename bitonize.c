@@ -585,7 +585,7 @@ static void bitonize_contours()/*{{{*/
 
 byte* get_colors(void) {
     byte *colors;
-    colors = (byte *) calloc(row_size * height, sizeof(byte));
+    colors = (byte *) malloc(row_size * height * sizeof(byte));
     int32 i, in,j, contour_index;
     byte color = 0;
     for (i = 0, in = 0; i < height; ++i, in += row_size) {
@@ -597,6 +597,35 @@ byte* get_colors(void) {
         }
     }
     return colors;
+}
+
+void blow_mask(byte *colors, int thickness) {
+    int i, in, j;
+    int k, l;
+    byte color;
+    byte *tmp_colors;
+    tmp_colors = (byte *) malloc(row_size * height * sizeof(byte));
+    memcpy(tmp_colors, colors, row_size * height * sizeof(byte));
+    for (i = 0, in = 0; i < height; ++i, in += row_size) {
+        for (j = 0; j < width; ++j) {
+            color = 0;
+            for (k = -thickness; k <= thickness; ++k) {
+                if (i + k >= 0 && i + k < height) {
+                    for (l = -thickness; l <= thickness; ++l) {
+                        /*printf("%d %d %d\n", k, l, k*k+l*l < thickness*thickness);*/
+                        if (k*k + l*l <= thickness*thickness) {
+                            if (l + j >= 0 && l + j < width) {
+                                color = color || colors[(i + k)*row_size + (j + l)];
+                            }
+                        }
+                    }
+                }
+            }
+            tmp_colors[in + j] = color;
+        }
+    }
+    memcpy(colors, tmp_colors, row_size * height * sizeof(byte));
+    free(tmp_colors);
 }
 
 // Writing PBM file {{{
@@ -630,6 +659,7 @@ static void produce_pbm(FILE *f)/*{{{*/
     fprintf(f, "P4\n%d %d\n", width, height);
 
     byte *colors = get_colors();
+    blow_mask(colors, 0);
     for (i = 0, in = 0; i < height; i++, in += row_size)
     {
         int j;
