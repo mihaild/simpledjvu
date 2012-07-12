@@ -82,3 +82,8 @@ void load_pgm(FILE *f, int32 *width, int32 *height, int32 *row_size, int32 *rows
         }
     }
 }/*}}}*/
+
+void save_pgm(FILE *f, byte *pixels, int width, int height) {
+    fprintf(f, "P5\n%d %d\n255\n", width, height);
+    fwrite(pixels, 1, width*height, f);
+}
