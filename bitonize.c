@@ -34,14 +34,11 @@
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
+#include "pgm.h"
 
 // All the program messages. Not a sophisticated interface, eh?.
-
 static const char
-    invalid_pgm[] = "Invalid PGM file\n",
-    usage[] = "usage: bitonize [<PGM input> [<PBM output>]]\n",
-    supported_256_only[] = "Only 256-level PGMs are supported\n";
-
+    usage[] = "usage: bitonize [<PGM input> [<PBM output>]]\n";
 
 // Level lines whose level belongs to `contour_levels' (below) are contours.
 // CONTOUR_LEVELS_COUNT is the length of `contour_levels'.
@@ -67,10 +64,6 @@ static const char
 
 #define FLOW_THRESHOLD 1000
 #define FLOW_THRESHOLD_PER_EDGE 100
-
-// The color of an image's margin (0 is black).
-// The value of black favors deletion of black margins on scanned images.
-#define MARGIN_COLOR 0
 
 typedef int int32;
 typedef unsigned char byte;
@@ -141,80 +134,6 @@ static void find_contour_levels()
 #endif // ifndef STATIC_THRESHOLDS
 
 // Building histogram and determining quantization colors /*}}}*/
-// Loading PGM and freeing pixels {{{
-
-// Skips to the end of line.
-static void pgm_skip_comment_line(FILE *file)/*{{{*/
-{
-    while (1) switch(fgetc(file))
-    {
-        case EOF: case '\r': case '\n':
-            return;
-    }
-}/*}}}*/
-static void pgm_skip_whitespace_and_comments(FILE *file)/*{{{*/
-{
-    int c = fgetc(file);
-    while(1) switch(c)
-    {
-        case '#':
-            pgm_skip_comment_line(file);
-            /* fall through */
-        case ' ': case '\t': case '\r': case '\n':
-            c = fgetc(file);
-        break;
-        default:
-            ungetc(c, file);
-            return;
-    }
-}/*}}}*/
-
-// Load a 256-level PGM. Calls exit() on error.
-static void load_pgm(FILE *f)/*{{{*/
-{
-    int i, in, maxval;
-
-    if (getc(f) != 'P')
-    {
-        fprintf(stderr, invalid_pgm);
-        exit(1);
-    }
-    if (getc(f) != '5')
-    {
-        fprintf(stderr, invalid_pgm);
-        exit(1);
-    }
-
-    pgm_skip_whitespace_and_comments(f);
-    fscanf(f, "%d %d %d", &width, &height, &maxval);
-    if (maxval != 255)
-    {
-        fprintf(stderr, supported_256_only);
-        exit(1);
-    }
-
-    switch(getc(f))
-    {
-        case ' ': case '\t': case '\r': case '\n':
-            break;
-        default:
-            fprintf(stderr, invalid_pgm);
-            exit(1);
-    }
-
-    row_size = width + 2;
-    rows_count = height + 2;
-    pixels = (byte *) malloc(row_size * rows_count);
-    memset(pixels, MARGIN_COLOR, row_size);
-    memset(pixels + (rows_count - 1) * row_size, MARGIN_COLOR, row_size);
-    pixels += width + 3;
-
-    for (i = 0, in = 0; i < height; i++, in += row_size)
-    {
-        fread(pixels + in, 1, width, f);
-        pixels[in - 1] = pixels[in + width] = MARGIN_COLOR;
-    }
-}/*}}}*/
 
 static void clean_up_pixels()
 {
@@ -659,7 +578,7 @@ static void produce_pbm(FILE *f)/*{{{*/
     fprintf(f, "P4\n%d %d\n", width, height);
 
     byte *colors = get_colors();
-    blow_mask(colors, 0);
+    blow_mask(colors, 3);
     for (i = 0, in = 0; i < height; i++, in += row_size)
     {
         int j;
@@ -724,7 +643,7 @@ int main(int argc, char **argv)/*{{{*/
         output = stdout;
     }
 
-    load_pgm(input);
+    load_pgm(input, &width, &height, &row_size, &rows_count, &pixels);
     initialize();
 
     if (input != stdin) fclose(input);
