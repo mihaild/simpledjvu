@@ -582,6 +582,23 @@ static void bitonize_contours()/*{{{*/
     free(bonus_if_1);
     free(preference);
 }/*}}}*/
+
+byte* get_colors(void) {
+    byte *colors;
+    colors = (byte *) calloc(row_size * height, sizeof(byte));
+    int32 i, in,j, contour_index;
+    byte color = 0;
+    for (i = 0, in = 0; i < height; ++i, in += row_size) {
+        for (j = 0; j < width; ++j) {
+            if (contour_index = pixel_contours[in + j]) {//=, not ==
+                color = contours[contour_index].color;
+            }
+            colors[in + j] = color;
+        }
+    }
+    return colors;
+}
+
 // Writing PBM file {{{
 
 static void pack_row(byte *bits, byte *bytes, int n)/*{{{*/
@@ -612,16 +629,13 @@ static void produce_pbm(FILE *f)/*{{{*/
 
     fprintf(f, "P4\n%d %d\n", width, height);
 
+    byte *colors = get_colors();
     for (i = 0, in = 0; i < height; i++, in += row_size)
     {
-        byte color = 0;
         int j;
-
         for (j = 0; j < width; j++)
         {
-            int32 contour_index = pixel_contours[in + j];
-            if (contour_index) color = contours[contour_index].color;
-            row[j] = color;
+            row[j] = colors[in + j];
         }
 
         pack_row(packed_row, row, width);
@@ -630,6 +644,7 @@ static void produce_pbm(FILE *f)/*{{{*/
 
     free(row);
     free(packed_row);
+    free(colors);
 }/*}}}*/
 
 // Writing PBM file }}}
