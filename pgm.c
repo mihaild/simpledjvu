@@ -33,7 +33,7 @@ static void pgm_skip_whitespace_and_comments(FILE *file)/*{{{*/
 }/*}}}*/
 
 // Load a 256-level PGM. Calls exit() on error.
-void load_pgm(FILE *f, int32 *width, int32 *height, int32 *row_size, int32 *rows_count, byte **pixels)/*{{{*/
+void load_pgm(FILE *f, int32 *width, int32 *height, int32 *row_size, int32 *rows_count, byte **pixels, int border)/*{{{*/
 {
     int i, in, maxval;
 
@@ -65,16 +65,20 @@ void load_pgm(FILE *f, int32 *width, int32 *height, int32 *row_size, int32 *rows
             exit(1);
     }
 
-    *row_size = *width + 2;
-    *rows_count = *height + 2;
-    *pixels = (byte *) malloc(*row_size * *rows_count);
-    memset(*pixels, MARGIN_COLOR, *row_size);
-    memset(*pixels + (*rows_count - 1) * *row_size, MARGIN_COLOR, *row_size);
-    *pixels += *width + 3;
+    (*row_size) = (*width) + (border ? 2 : 0);
+    (*rows_count) = (*height) + (border ? 2 : 0);
+    (*pixels) = (byte *) malloc((*row_size) * (*rows_count));
+    if (border) {
+        memset((*pixels), MARGIN_COLOR, (*row_size));
+        memset((*pixels) + ((*rows_count) - 1) * (*row_size), MARGIN_COLOR, (*row_size));
+        (*pixels) += (*width) + 3;
+    }
 
-    for (i = 0, in = 0; i < *height; i++, in += *row_size)
+    for (i = 0, in = 0; i < (*height); i++, in += (*row_size))
     {
-        fread(*pixels + in, 1, *width, f);
-        *pixels[in - 1] = *pixels[in + *width] = MARGIN_COLOR;
+        fread((*pixels) + in, 1, (*width), f);
+        if (border) {
+            (*pixels)[in - 1] = (*pixels)[in + (*width)] = MARGIN_COLOR;
+        }
     }
 }/*}}}*/

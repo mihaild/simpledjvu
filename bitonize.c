@@ -643,7 +643,7 @@ int main(int argc, char **argv)/*{{{*/
         output = stdout;
     }
 
-    load_pgm(input, &width, &height, &row_size, &rows_count, &pixels);
+    load_pgm(input, &width, &height, &row_size, &rows_count, &pixels, 1);
     initialize();
 
     if (input != stdin) fclose(input);
