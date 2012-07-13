@@ -87,3 +87,48 @@ void save_pgm(FILE *f, byte *pixels, int width, int height) {
     fprintf(f, "P5\n%d %d\n255\n", width, height);
     fwrite(pixels, 1, width*height, f);
 }
+
+static void pack_row(byte *bits, byte *bytes, int n)/*{{{*/
+{
+    int coef = 0x80;
+    int i = n;
+    int a = 0;
+    while (i--)
+    {
+        if (*bytes++) a |= coef;
+
+        coef >>= 1;
+        if (!coef)
+        {
+            coef = 0x80;
+            *bits++ = a;
+            a = 0;
+        }
+    }
+    if (n & 7) *bits = a;
+}/*}}}*/
+
+void save_pbm(FILE *f, byte *colors, int32 width, int32 height, int32 row_size, int32 rows_count) {
+    int32 packed_row_size = (width + 7) >> 3;
+    byte *row = (byte *) malloc(width);
+    byte *packed_row = (byte *) malloc(packed_row_size);
+    int32 i, in;
+
+    fprintf(f, "P4\n%d %d\n", width, height);
+
+    for (i = 0, in = 0; i < height; i++, in += row_size)
+    {
+        int j;
+        for (j = 0; j < width; j++)
+        {
+            row[j] = colors[in + j];
+        }
+
+        pack_row(packed_row, row, width);
+        fwrite(packed_row, 1, packed_row_size, f);
+    }
+
+    free(row);
+    free(packed_row);
+    free(colors);
+}

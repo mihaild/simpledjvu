@@ -547,51 +547,11 @@ void blow_mask(byte *colors, int thickness) {
 
 // Writing PBM file {{{
 
-static void pack_row(byte *bits, byte *bytes, int n)/*{{{*/
+static void produce_pbm(FILE *f, int blow_thick)/*{{{*/
 {
-    int coef = 0x80;
-    int i = n;
-    int a = 0;
-    while (i--)
-    {
-        if (*bytes++) a |= coef;
-
-        coef >>= 1;
-        if (!coef)
-        {
-            coef = 0x80;
-            *bits++ = a;
-            a = 0;
-        }
-    }
-    if (n & 7) *bits = a;
-}/*}}}*/
-static void produce_pbm(FILE *f)/*{{{*/
-{
-    int32 packed_row_size = (width + 7) >> 3;
-    byte *row = (byte *) malloc(width);
-    byte *packed_row = (byte *) malloc(packed_row_size);
-    int32 i, in;
-
-    fprintf(f, "P4\n%d %d\n", width, height);
-
     byte *colors = get_colors();
-    blow_mask(colors, 0);
-    for (i = 0, in = 0; i < height; i++, in += row_size)
-    {
-        int j;
-        for (j = 0; j < width; j++)
-        {
-            row[j] = colors[in + j];
-        }
-
-        pack_row(packed_row, row, width);
-        fwrite(packed_row, 1, packed_row_size, f);
-    }
-
-    free(row);
-    free(packed_row);
-    free(colors);
+    blow_mask(colors, blow_thick);
+    save_pbm(f, colors, width, height, row_size, rows_count);
 }/*}}}*/
 
 // Writing PBM file }}}
@@ -607,7 +567,7 @@ int main(int argc, char **argv)/*{{{*/
     assert(sizeof(byte) == 1);
     assert(sizeof(int32) == 4);
 
-    if (argc > 3)
+    if (argc > 4)
     {
         fputs(usage, stderr);
         return 2;
@@ -641,6 +601,15 @@ int main(int argc, char **argv)/*{{{*/
         output = stdout;
     }
 
+    int blow_thick;
+
+    if (argc >= 4) {
+        blow_thick = atoi(argv[3]);
+    }
+    else {
+        blow_thick = 0;
+    }
+
     load_pgm(input, &width, &height, &row_size, &rows_count, &pixels, 1);
     initialize();
 
@@ -654,7 +623,7 @@ int main(int argc, char **argv)/*{{{*/
 
     bitonize_contours();
 
-    produce_pbm(output);
+    produce_pbm(output, blow_thick);
     if (output != stdout) fclose(output);
 
     clean_up();

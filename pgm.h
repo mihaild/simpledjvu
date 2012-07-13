@@ -20,3 +20,6 @@ static void pgm_skip_whitespace_and_comments(FILE *file);
 // Load a 256-level PGM. Calls exit() on error.
 //static void load_pgm(FILE *f);
 void load_pgm(FILE *f, int32 *width, int32 *height, int32 *row_size, int32 *rows_count, byte **pixels, int border);
+void save_pgm(FILE *f, byte *pixels, int width, int height);
+
+void save_pbm(FILE *f, byte *colors, int32 width, int32 height, int32 row_size, int32 rows_count);
