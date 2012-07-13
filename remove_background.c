@@ -5,6 +5,17 @@
 typedef int int32;
 typedef unsigned char byte;
 
+#define CANONICAL_BACKGROUND_LEVEL 220
+
+byte canonize_level(byte bg, byte raw) {
+    if ((raw <= bg) && (bg != 0)) {//мы типа в foreground
+        return (byte)((int) CANONICAL_BACKGROUND_LEVEL * raw / bg);
+    }
+    else {//мы типа в background
+        return (byte)((int) (raw - bg) * (255 - CANONICAL_BACKGROUND_LEVEL) / (255 - bg) + CANONICAL_BACKGROUND_LEVEL);
+    }
+}
+
 void remove_background(byte *data_pixels, byte *background_pixels, byte *result_pixels, int32 width, int32 height) {
     int32 i, j;
     int32 target;
@@ -13,12 +24,8 @@ void remove_background(byte *data_pixels, byte *background_pixels, byte *result_
             target = i * width + j;
             /*result_pixels[target] = (background_pixels[target] > data_pixels[target]) ? (background_pixels[target] - data_pixels[target]) : 255;*/
             byte color;
-            if (background_pixels[target] < data_pixels[target]) {
-                color = data_pixels[target];
-            }
-            else {
-                color = (255 - background_pixels[target]) / 2 + data_pixels[target];
-            }
+            color = canonize_level(background_pixels[target], data_pixels[target]);
+            /*color = max(data_pixels[target], 255-background_pixels[target]);*/
             result_pixels[target] = color;
         }
     }
