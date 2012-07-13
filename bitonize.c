@@ -35,6 +35,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include "pgm.h"
+#include "types.h"
 
 // All the program messages. Not a sophisticated interface, eh?.
 static const char
@@ -64,9 +65,6 @@ static const char
 
 #define FLOW_THRESHOLD 1000
 #define FLOW_THRESHOLD_PER_EDGE 100
-
-typedef int int32;
-typedef unsigned char byte;
 
 static int32 width, height; // of the image, excluding margin
 
@@ -578,7 +576,7 @@ static void produce_pbm(FILE *f)/*{{{*/
     fprintf(f, "P4\n%d %d\n", width, height);
 
     byte *colors = get_colors();
-    blow_mask(colors, 3);
+    blow_mask(colors, 0);
     for (i = 0, in = 0; i < height; i++, in += row_size)
     {
         int j;

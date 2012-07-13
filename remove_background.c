@@ -1,9 +1,7 @@
 #include "pgm.h"
 #include <stdlib.h>
 #include <stdio.h>
-
-typedef int int32;
-typedef unsigned char byte;
+#include "types.h"
 
 #define CANONICAL_BACKGROUND_LEVEL 220
 

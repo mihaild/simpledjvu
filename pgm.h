@@ -1,13 +1,11 @@
 #pragma once
 
 #include <stdio.h>
+#include "types.h"
 
 static const char
     invalid_pgm[] = "Invalid PGM file\n",
     supported_256_only[] = "Only 256-level PGMs are supported\n";
-
-typedef int int32;
-typedef unsigned char byte;
 
 // Loading PGM and freeing pixels {{{
 
