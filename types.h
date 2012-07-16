@@ -11,5 +11,10 @@ typedef int int32;
 typedef unsigned char byte;
 
 typedef array<int, COLORS_COUNT> Hystogram;
-typedef array<int, QUANT> LevelsDistribution;
+
+struct LevelsDistribution {
+    byte background;
+    byte foreground;
+};
+
 typedef vector<vector<LevelsDistribution> > GlobalLevelsDistribution;
