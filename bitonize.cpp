@@ -37,6 +37,12 @@
 #include "pgm.h"
 #include "types.h"
 
+#include <vector>
+#include <array>
+
+using std::vector;
+using std::array;
+
 // All the program messages. Not a sophisticated interface, eh?.
 static const char
     usage[] = "usage: bitonize [<PGM input> [<PBM output>]]\n";
@@ -85,6 +91,25 @@ typedef struct
     byte color; // 0/1; filled after all the contours have been discovered
     byte level; // index to `contour_levels' array
 } Contour;
+
+const int COLORS_COUNT = 256;
+typedef array<int, COLORS_COUNT> Hystogram;
+
+Hystogram operator -(const Hystogram &a, const Hystogram &b) {
+    Hystogram result(a);
+    for (int i = 0; i < COLORS_COUNT; ++i) {
+        result[i] -= b[i];
+    }
+    return result;
+}
+
+Hystogram operator +(const Hystogram &a, const Hystogram &b) {
+    Hystogram result;
+    for (int i = 0; i < COLORS_COUNT; ++i) {
+        result[i] += b[i];
+    }
+    return result;
+}
 
 // Introduction }}}
 // Building histogram and determining quantization colors/*{{{*/
@@ -161,12 +186,14 @@ static int32 allocate_contour()/*{{{*/
     }
     return contours_count++;
 }/*}}}*/
+
 static void fill_in_left_column()/*{{{*/
 {
     int i, in = 0;
     for (i = 0; i < height; i++, i+=row_size)
         pixel_contours[in] = 1; // indicates that all pixels belong to the root
 }/*}}}*/
+
 static void initialize()/*{{{*/
 {
     pixel_contours = (int32 *) calloc(row_size * height, sizeof(int32)) + 1;
@@ -189,29 +216,26 @@ static void freeze_contours()/*{{{*/
 }/*}}}*/
 
 // fails if radius > min(row_size, rows_count)
-int** make_hystograms(byte *pixels, int row_size, int rows_count, int radius) {
-    int **result;
-    result = (int **) malloc(QUANT * sizeof(int *));
-    int level, i, j, k, l;
-    for (level = 0; level < QUANT; ++level) {
-        result[level] = (int *) calloc(row_size * rows_count, sizeof(int));
-    }
-    int **hystograms[256];
-}
-
-byte* make_local_hystogram(byte *pixels, int row_size, int rows_count, int x, int y, int radius) {
-    int k, l;
-    byte *result = (byte *) calloc(256, sizeof(byte));
-    for (k = -radius; k <= radius; ++k) {
-        if (x + k >= 0 && x + k < height) {
-            for (l = -radius; l <= radius; ++l) {
-                /*printf("%d %d %d\n", k, l, k*k+l*l < thickness*thickness);*/
-                if (k*k + l*l <= radius*radius) {
-                    if (l + y >= 0 && l + y < width) {
-                        ++result[pixels[(x + k)*row_size + (y + l)]];
-                    }
-                }
+vector<vector<Hystogram> > get_hystograms(byte *pixels, int row_size, int rows_count, int radius) {
+    vector<vector<Hystogram> > rectangles_hystogram(rows_count, vector<Hystogram> (row_size));
+    ++rectangles_hystogram[0][0][pixels[0]];
+    for (int i = 0; i < rows_count; ++i) {
+        if (i != 0) {
+            rectangles_hystogram[i] = rectangles_hystogram[i-1];
+        }
+        for (int j = 0; j < row_size; ++j) {
+            if (j != 0) {
+                rectangles_hystogram[i][j] = rectangles_hystogram[i][j-1];
+                ++rectangles_hystogram[i][j][pixels[i * row_size + j]];
             }
+        }
+    }
+    vector<vector<Hystogram> > result(rows_count, vector<Hystogram> (row_size));
+    for (int i = 0; i < rows_count; ++i) {
+        int left = ((i - radius/2) > 0) ? (i - radius/2) : 0;
+        for (int j = 0; j < row_size; ++j) {
+            int top = ((j - radius/2) > 0) ? (j - radius/2) : 0;
+            result[i][j] = rectangles_hystogram[left + radius][top + radius] - rectangles_hystogram[left][top + radius] - rectangles_hystogram[left + radius][top] + rectangles_hystogram[left][top];
         }
     }
     return result;
