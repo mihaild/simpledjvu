@@ -138,5 +138,4 @@ void save_pbm(FILE *f, byte *colors, int32 width, int32 height, int32 row_size, 
 
     free(row);
     free(packed_row);
-    free(colors);
 }
