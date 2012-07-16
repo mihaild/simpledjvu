@@ -12,19 +12,19 @@ decrease_colors_count: decrease_colors_count.o pgm.o
 bitonize_threshold: bitonize_threshold.o pgm.o
 	g++ -O3 -std=c++0x -o bitonize_threshold bitonize_threshold.o pgm.o
 
-bitonize.o: bitonize.cpp types.h
+bitonize.o: bitonize.cpp types.h constants.h
 	g++ -O3 -std=c++0x -c -o bitonize.o bitonize.cpp
 
-remove_background.o: remove_background.cpp types.h pgm.h
+remove_background.o: remove_background.cpp types.h pgm.h constants.h
 	g++ -O3 -std=c++0x -c -o remove_background.o remove_background.cpp
 
-decrease_colors_count.o: decrease_colors_count.cpp types.h pgm.h
+decrease_colors_count.o: decrease_colors_count.cpp types.h pgm.h constants.h
 	g++ -O3 -std=c++0x -c -o decrease_colors_count.o decrease_colors_count.cpp
 
-bitonize_threshold.o: bitonize_threshold.cpp types.h pgm.h
+bitonize_threshold.o: bitonize_threshold.cpp types.h pgm.h constants.h
 	g++ -O3 -std=c++0x -c -o bitonize_threshold.o bitonize_threshold.cpp
 
-pgm.o: pgm.cpp types.h
+pgm.o: pgm.cpp types.h constants.h
 	g++ -O3 -std=c++0x -c -o pgm.o pgm.cpp
 
 clean:

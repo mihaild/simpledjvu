@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdio.h>
+#include "constants.h"
 #include "types.h"
 #include <string>
 
@@ -9,10 +10,6 @@ const char
     supported_256_only[] = "Only 256-level PGMs are supported\n";
 
 // Loading PGM and freeing pixels {{{
-
-// The color of an image's margin (0 is black).
-// The value of black favors deletion of black margins on scanned images.
-#define MARGIN_COLOR 0
 
 // Skips to the end of line.
 void pgm_skip_comment_line(FILE *file);

@@ -35,6 +35,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include "pgm.h"
+#include "constants.h"
 #include "types.h"
 
 #include <vector>
@@ -46,31 +47,6 @@ using std::array;
 // All the program messages. Not a sophisticated interface, eh?.
 static const char
     usage[] = "usage: bitonize [<PGM input> [<PBM output>]]\n";
-
-// Level lines whose level belongs to `contour_levels' (below) are contours.
-// CONTOUR_LEVELS_COUNT is the length of `contour_levels'.
-// A contour is a cycled path, and may be lightening or darkening.
-// Each contour has a `gradient flow', that is,
-//    sum (for all contour edges) of
-//       difference between the pixel inside and the pixel outside.
-#define CONTOUR_LEVELS_COUNT 8
-// QUANT is the same but using STATIC_THRESHOLDS
-#define QUANT 32
-
-//  Darkening contours with level less than this are considered suspicious.
-#define LOW_SUSPICIOUS_THRESHOLD 4
-
-// Lightening contours with level more than this are considered suspicious.
-#define HIGH_SUSPICIOUS_THRESHOLD 3
-
-// A suspicious contour is considered garbage
-//    if
-//      its gradient flow < FLOW_THRESHOLD
-//    or
-//      its gradient flow < FLOW_THRESHOLD_PER_EDGE * contour's length
-
-#define FLOW_THRESHOLD 1000
-#define FLOW_THRESHOLD_PER_EDGE 100
 
 static int32 width, height; // of the image, excluding margin
 
@@ -91,25 +67,6 @@ typedef struct
     byte color; // 0/1; filled after all the contours have been discovered
     byte level; // index to `contour_levels' array
 } Contour;
-
-const int COLORS_COUNT = 256;
-typedef array<int, COLORS_COUNT> Hystogram;
-
-Hystogram operator -(const Hystogram &a, const Hystogram &b) {
-    Hystogram result(a);
-    for (int i = 0; i < COLORS_COUNT; ++i) {
-        result[i] -= b[i];
-    }
-    return result;
-}
-
-Hystogram operator +(const Hystogram &a, const Hystogram &b) {
-    Hystogram result;
-    for (int i = 0; i < COLORS_COUNT; ++i) {
-        result[i] += b[i];
-    }
-    return result;
-}
 
 // Introduction }}}
 // Building histogram and determining quantization colors/*{{{*/
@@ -214,34 +171,6 @@ static void freeze_contours()/*{{{*/
     contours = (Contour *) realloc
         (contours, contours_count * sizeof(Contour));
 }/*}}}*/
-
-// fails if radius > min(row_size, rows_count)
-vector<vector<Hystogram> > get_hystograms(byte *pixels, int row_size, int rows_count, int radius) {
-    vector<vector<Hystogram> > rectangles_hystogram(rows_count, vector<Hystogram> (row_size));
-    ++rectangles_hystogram[0][0][pixels[0]];
-    for (int i = 0; i < rows_count; ++i) {
-        if (i != 0) {
-            rectangles_hystogram[i] = rectangles_hystogram[i-1];
-        }
-        for (int j = 0; j < row_size; ++j) {
-            if (j != 0) {
-                rectangles_hystogram[i][j] = rectangles_hystogram[i][j-1];
-                ++rectangles_hystogram[i][j][pixels[i * row_size + j]];
-            }
-        }
-    }
-    vector<vector<Hystogram> > result(rows_count, vector<Hystogram> (row_size));
-    for (int i = 0; i < rows_count; ++i) {
-        int left = ((i - radius/2) > 0) ? (i - radius/2) : 0;
-        for (int j = 0; j < row_size; ++j) {
-            int top = ((j - radius/2) > 0) ? (j - radius/2) : 0;
-            result[i][j] = rectangles_hystogram[left + radius][top + radius] - rectangles_hystogram[left][top + radius] - rectangles_hystogram[left + radius][top] + rectangles_hystogram[left][top];
-        }
-    }
-    return result;
-}
-
-
 
 // Constructs a path starting from the right border of (x_start,y_start) pixel,
 // of level `level' and assuming the innermost containing contour is `parent'.
