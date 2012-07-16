@@ -2,8 +2,9 @@
 
 #include <stdio.h>
 #include "types.h"
+#include <string>
 
-static const char
+const char
     invalid_pgm[] = "Invalid PGM file\n",
     supported_256_only[] = "Only 256-level PGMs are supported\n";
 
@@ -14,8 +15,8 @@ static const char
 #define MARGIN_COLOR 0
 
 // Skips to the end of line.
-static void pgm_skip_comment_line(FILE *file);
-static void pgm_skip_whitespace_and_comments(FILE *file);
+void pgm_skip_comment_line(FILE *file);
+void pgm_skip_whitespace_and_comments(FILE *file);
 
 // Load a 256-level PGM. Calls exit() on error.
 //static void load_pgm(FILE *f);

@@ -188,6 +188,37 @@ static void freeze_contours()/*{{{*/
         (contours, contours_count * sizeof(Contour));
 }/*}}}*/
 
+// fails if radius > min(row_size, rows_count)
+int** make_hystograms(byte *pixels, int row_size, int rows_count, int radius) {
+    int **result;
+    result = (int **) malloc(QUANT * sizeof(int *));
+    int level, i, j, k, l;
+    for (level = 0; level < QUANT; ++level) {
+        result[level] = (int *) calloc(row_size * rows_count, sizeof(int));
+    }
+    int **hystograms[256];
+}
+
+byte* make_local_hystogram(byte *pixels, int row_size, int rows_count, int x, int y, int radius) {
+    int k, l;
+    byte *result = (byte *) calloc(256, sizeof(byte));
+    for (k = -radius; k <= radius; ++k) {
+        if (x + k >= 0 && x + k < height) {
+            for (l = -radius; l <= radius; ++l) {
+                /*printf("%d %d %d\n", k, l, k*k+l*l < thickness*thickness);*/
+                if (k*k + l*l <= radius*radius) {
+                    if (l + y >= 0 && l + y < width) {
+                        ++result[pixels[(x + k)*row_size + (y + l)]];
+                    }
+                }
+            }
+        }
+    }
+    return result;
+}
+
+
+
 // Constructs a path starting from the right border of (x_start,y_start) pixel,
 // of level `level' and assuming the innermost containing contour is `parent'.
 static int32 build_path(int32 x_start, int32 y_start, byte level, int32 parent)/*{{{*/

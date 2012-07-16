@@ -2,12 +2,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
 
 // Building histogram and determining quantization colors /*}}}*/
 // Loading PGM and freeing pixels {{{
 
 // Skips to the end of line.
-static void pgm_skip_comment_line(FILE *file)/*{{{*/
+
+using std::cerr;
+
+void pgm_skip_comment_line(FILE *file)/*{{{*/
 {
     while (1) switch(fgetc(file))
     {
@@ -15,7 +19,7 @@ static void pgm_skip_comment_line(FILE *file)/*{{{*/
             return;
     }
 }/*}}}*/
-static void pgm_skip_whitespace_and_comments(FILE *file)/*{{{*/
+void pgm_skip_whitespace_and_comments(FILE *file)/*{{{*/
 {
     int c = fgetc(file);
     while(1) switch(c)
@@ -39,12 +43,14 @@ void load_pgm(FILE *f, int32 *width, int32 *height, int32 *row_size, int32 *rows
 
     if (getc(f) != 'P')
     {
-        fprintf(stderr, invalid_pgm);
+        /*fprintf(stderr, invalid_pgm);*/
+        cerr << invalid_pgm;
         exit(1);
     }
     if (getc(f) != '5')
     {
-        fprintf(stderr, invalid_pgm);
+        /*fprintf(stderr, invalid_pgm);*/
+        cerr << invalid_pgm;
         exit(1);
     }
 
@@ -52,7 +58,8 @@ void load_pgm(FILE *f, int32 *width, int32 *height, int32 *row_size, int32 *rows
     fscanf(f, "%d %d %d", width, height, &maxval);
     if (maxval != 255)
     {
-        fprintf(stderr, supported_256_only);
+        /*fprintf(stderr, supported_256_only);*/
+        cerr << supported_256_only;
         exit(1);
     }
 
@@ -61,7 +68,8 @@ void load_pgm(FILE *f, int32 *width, int32 *height, int32 *row_size, int32 *rows
         case ' ': case '\t': case '\r': case '\n':
             break;
         default:
-            fprintf(stderr, invalid_pgm);
+            /*fprintf(stderr, invalid_pgm);*/
+            cerr << invalid_pgm;
             exit(1);
     }
 
@@ -88,7 +96,7 @@ void save_pgm(FILE *f, byte *pixels, int width, int height) {
     fwrite(pixels, 1, width*height, f);
 }
 
-static void pack_row(byte *bits, byte *bytes, int n)/*{{{*/
+void pack_row(byte *bits, byte *bytes, int n)/*{{{*/
 {
     int coef = 0x80;
     int i = n;
