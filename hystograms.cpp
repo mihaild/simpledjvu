@@ -8,6 +8,8 @@
 #include "constants.h"
 #include "pgm.h"
 
+#include <assert.h>
+
 using std::vector;
 using std::array;
 using std::fill;
@@ -65,7 +67,12 @@ Hystogram get_local_hystogram(const vector<vector<Hystogram> > &rectangles_hysto
     if ((top + radius) >= rectangles_hystogram[left].size()) {
         top = rectangles_hystogram[left].size() - radius - 1;
     }
-    return rectangles_hystogram[left][top] + rectangles_hystogram[left + radius][top + radius] - rectangles_hystogram[left][top + radius] - rectangles_hystogram[left + radius][top];
+    auto result = rectangles_hystogram[left][top] + rectangles_hystogram[left + radius][top + radius] - rectangles_hystogram[left][top + radius] - rectangles_hystogram[left + radius][top];
+    for (int i = 0; i < result.size(); ++i) {
+        assert(result[i] >= 0);
+        assert(result[i] <= radius*radius);
+    }
+    return result;
 }
 
 LevelsDistribution get_levels_distribution(const Hystogram &hystogram) {
@@ -103,31 +110,31 @@ int main(int argc, char *argv[]) {
             }
         }
     }
+    int canonical_max_hysto = max_hysto;
 
     const int COLORS_SCALE = 4;
-    const int LEVEL_SCALE = 2;
-    for (int i = radius / 2; i < width; i += radius) {
-        for (int j = radius / 2; j < height; j += radius) {
+    const int LEVEL_SCALE = 8;
+    int picture_size = COLORS_COUNT*COLORS_SCALE*(canonical_max_hysto/LEVEL_SCALE);
+    byte *colors = new byte[picture_size];
+    for (int i = radius / 2; i < width / 2; i += radius) {
+        for (int j = radius / 2; j < height / 2; j += radius) {
             std::cout << i << ' ' << j << "\n";
             Hystogram hystogram = get_local_hystogram(rectangle_hystograms, radius, i, j);
-            max_hysto = *std::max(hystogram.begin(), hystogram.end());
-            int picture_size = COLORS_COUNT*max_hysto*COLORS_COUNT*LEVEL_SCALE;
-            byte *colors = new byte[picture_size];
+            std::reverse(hystogram.begin(), hystogram.end());
+
+            max_hysto = *std::max_element(hystogram.begin(), hystogram.end());
             for (int k = 0; k < picture_size; ++k) {
                 colors[k] = 0;
             }
+
             for (int k = 0; k < COLORS_COUNT; ++k) {
                 if (hystogram[k]) {
                     cout << k << ' ' << hystogram[k] << '\n';
                 }
-                for (int l = 0; l < LEVEL_SCALE*hystogram[k]; ++l) {
-                    /*colors[k*max_hysto*2 + l*2] = 
-                        colors[k*max_hysto*2 + l*2 + 1] =
-                        colors[(k+1)*max_hysto*2 + l*2] =
-                        colors[(k+1)*max_hysto*2 + l*2 + 1] =
-                        1;*/
-                    for (int p = 0; p < COLORS_COUNT; ++p) {
-                        colors[picture_size - (k*COLORS_COUNT + p + l*COLORS_COUNT*COLORS_COUNT)] = 1;
+                for (int l = 0; l < (canonical_max_hysto / max_hysto) * hystogram[k] / LEVEL_SCALE; ++l) {
+                    for (int p = 0; p < COLORS_SCALE; ++p) {
+                        colors[picture_size - (k*COLORS_SCALE + p + l*COLORS_COUNT*COLORS_SCALE)] = 1;
+                        //colors[(k*COLORS_SCALE + p + l*COLORS_COUNT*COLORS_SCALE)] = 1;
                     }
                 }
             }
@@ -138,15 +145,13 @@ int main(int argc, char *argv[]) {
             std::cout << fname << '\n';
             FILE *out(fopen(fname, "wb"));
             std::cout << "saving...\n";
-            //save_pbm(out, colors, max_hysto*2, COLORS_COUNT*2, max_hysto*2, COLORS_COUNT*2);
-            save_pbm(out, colors, COLORS_COUNT*COLORS_SCALE, max_hysto*LEVEL_SCALE, COLORS_COUNT*COLORS_SCALE, max_hysto*LEVEL_SCALE);
+            save_pbm(out, colors, COLORS_COUNT*COLORS_SCALE, canonical_max_hysto/LEVEL_SCALE, COLORS_COUNT*COLORS_SCALE, canonical_max_hysto/LEVEL_SCALE);
             cout << "closing...\n";
             fclose(out);
             std::cout << "saved\n";
-            delete colors;
         }
     }
-    //delete colors;
+    delete colors;
 
     return 0;
 }
