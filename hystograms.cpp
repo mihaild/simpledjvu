@@ -42,6 +42,9 @@ vector<vector<Hystogram> > get_rectangle_hystograms(byte *pixels, int row_size, 
         Hystogram cline;
         fill(cline.begin(), cline.end(), 0);
         for (int j = 0; j < row_size; ++j) {
+            /*for (int k = 0; k <= pixels[i * row_size + j]; ++k) {
+                ++cline[k];
+            }*/
             ++cline[pixels[i * row_size + j]];
             rectangles_hystogram[i][j] = cline;
             if (i != 0) {
@@ -88,16 +91,6 @@ int main(int argc, char *argv[]) {
     int radius = atoi(argv[2]);
 
     vector<vector<Hystogram> > rectangle_hystograms = get_rectangle_hystograms(pixels, row_size, rows_count);
-    /*for (int k = 203; k < 204; ++k) {
-        cout << k << ' ';
-        cout << rectangle_hystograms[0][0][k] << ' ';
-        cout << rectangle_hystograms[radius][0][k] << ' ';
-        cout << rectangle_hystograms[0][radius][k] << ' ';
-        cout << rectangle_hystograms[radius][radius][k] << ' ';
-        cout << get_local_hystogram(rectangle_hystograms, radius, 25, 25)[k] << ' ';
-        cout << '\n';
-    }
-    return 0;*/
 
     std::cout << "hystograms OK\n";
 
@@ -106,29 +99,36 @@ int main(int argc, char *argv[]) {
         for (int j = radius / 2; j < height; j += radius) {
             Hystogram hystogram = get_local_hystogram(rectangle_hystograms, radius, i, j);
             for (int k = 0; k < COLORS_COUNT; ++k) {
-                max_hysto = max_hysto > hystogram[k] ? max_hysto : hystogram[k];
+                max_hysto = (max_hysto > hystogram[k]) ? max_hysto : hystogram[k];
             }
         }
     }
 
-    byte *colors = new byte[COLORS_COUNT*max_hysto*4];
+    const int COLORS_SCALE = 4;
+    const int LEVEL_SCALE = 2;
     for (int i = radius / 2; i < width; i += radius) {
         for (int j = radius / 2; j < height; j += radius) {
-            for (int k = 0; k < COLORS_COUNT*max_hysto*4; ++k) {
-                colors[k] = 0;
-            }
             std::cout << i << ' ' << j << "\n";
             Hystogram hystogram = get_local_hystogram(rectangle_hystograms, radius, i, j);
+            max_hysto = *std::max(hystogram.begin(), hystogram.end());
+            int picture_size = COLORS_COUNT*max_hysto*COLORS_COUNT*LEVEL_SCALE;
+            byte *colors = new byte[picture_size];
+            for (int k = 0; k < picture_size; ++k) {
+                colors[k] = 0;
+            }
             for (int k = 0; k < COLORS_COUNT; ++k) {
                 if (hystogram[k]) {
                     cout << k << ' ' << hystogram[k] << '\n';
                 }
-                for (int l = 0; l < hystogram[k]; ++l) {
-                    colors[k*max_hysto*2 + l*2] = 
+                for (int l = 0; l < LEVEL_SCALE*hystogram[k]; ++l) {
+                    /*colors[k*max_hysto*2 + l*2] = 
                         colors[k*max_hysto*2 + l*2 + 1] =
                         colors[(k+1)*max_hysto*2 + l*2] =
                         colors[(k+1)*max_hysto*2 + l*2 + 1] =
-                        1;
+                        1;*/
+                    for (int p = 0; p < COLORS_COUNT; ++p) {
+                        colors[picture_size - (k*COLORS_COUNT + p + l*COLORS_COUNT*COLORS_COUNT)] = 1;
+                    }
                 }
             }
             std::cout << "ok\n";
@@ -138,13 +138,15 @@ int main(int argc, char *argv[]) {
             std::cout << fname << '\n';
             FILE *out(fopen(fname, "wb"));
             std::cout << "saving...\n";
-            save_pbm(out, colors, max_hysto*2, COLORS_COUNT*2, max_hysto*2, COLORS_COUNT*2);
+            //save_pbm(out, colors, max_hysto*2, COLORS_COUNT*2, max_hysto*2, COLORS_COUNT*2);
+            save_pbm(out, colors, COLORS_COUNT*COLORS_SCALE, max_hysto*LEVEL_SCALE, COLORS_COUNT*COLORS_SCALE, max_hysto*LEVEL_SCALE);
             cout << "closing...\n";
             fclose(out);
             std::cout << "saved\n";
+            delete colors;
         }
     }
-    delete colors;
+    //delete colors;
 
     return 0;
 }
