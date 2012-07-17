@@ -1,4 +1,4 @@
-all: bitonize remove_background decrease_colors_count bitonize_threshold build_hystograms
+all: bitonize remove_background decrease_colors_count bitonize_threshold build_hystograms local_threshold
 
 bitonize: bitonize.o pgm.o
 	g++ -O3 -std=c++0x -o bitonize bitonize.o pgm.o
@@ -15,6 +15,9 @@ bitonize_threshold: bitonize_threshold.o pgm.o
 build_hystograms: build_hystograms.o hystograms.o pgm.o
 	g++ -O3 -std=c++0x -o build_hystograms build_hystograms.o hystograms.o pgm.o
 
+local_threshold: local_threshold.o hystograms.o pgm.o
+	g++ -O3 -std=c++0x -o local_threshold local_threshold.o hystograms.o pgm.o
+
 bitonize.o: bitonize.cpp types.h constants.h
 	g++ -O3 -std=c++0x -c -o bitonize.o bitonize.cpp
 
@@ -27,8 +30,11 @@ decrease_colors_count.o: decrease_colors_count.cpp types.h pgm.h constants.h
 bitonize_threshold.o: bitonize_threshold.cpp types.h pgm.h constants.h
 	g++ -O3 -std=c++0x -c -o bitonize_threshold.o bitonize_threshold.cpp
 
-build_hystograms.o: build_hystograms.cpp  types.h pgm.h constants.h
+build_hystograms.o: build_hystograms.cpp types.h pgm.h constants.h
 	g++ -O3 -std=c++0x -c -o build_hystograms.o build_hystograms.cpp
+
+local_threshold.o: local_threshold.cpp types.h pgm.h constants.h
+	g++ -O3 -std=c++0x -c -o local_threshold.o local_threshold.cpp
 
 hystograms.o: hystograms.cpp types.h pgm.h constants.h
 	g++ -O3 -std=c++0x -c -o hystograms.o hystograms.cpp
