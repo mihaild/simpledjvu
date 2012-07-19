@@ -48,5 +48,8 @@ hystograms.o: hystograms.cpp types.h pgm.h constants.h
 pgm.o: pgm.cpp types.h constants.h
 	g++ -O3 -std=c++0x -c -o pgm.o pgm.cpp
 
+disjoint_set_forest.o: disjoint_set_forest.cpp disjoint_set_forest.h
+	g++ -O3 -std=c++0x -c -o disjoint_set_forest.o disjoint_set_forest.cpp
+
 clean:
-	rm -f pgm.o bitonize.o remove_background.o decrease_colors_count.o hystograms.o classifier_bitonize.o bitonize remove_background decrease_colors_count bitonize_threshold build_hystograms classifier_bitonize
+	rm -f pgm.o bitonize.o remove_background.o decrease_colors_count.o hystograms.o classifier_bitonize.o disjoint_set_forest.o bitonize remove_background decrease_colors_count bitonize_threshold build_hystograms classifier_bitonize
