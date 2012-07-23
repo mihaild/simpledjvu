@@ -6,7 +6,7 @@ DisjointSetForest::DisjointSetForest(int size): parent(size), rank(size, 0) {
     }
 }
 
-int DisjointSetForest::find(int x) {
+inline int DisjointSetForest::find(int x) {
     if (parent[x] != x) {
         parent[x] = find(parent[x]);
     }
@@ -28,4 +28,8 @@ void DisjointSetForest::unite(int x, int y) {
             ++rank[x];
         }
     }
+}
+
+inline int DisjointSetForest::operator[] (int x) {
+    return find(x);
 }

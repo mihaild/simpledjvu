@@ -10,4 +10,5 @@ class DisjointSetForest {
         DisjointSetForest(int size);
         int find(int x);
         void unite(int x, int y);
+        int operator[] (int x);
 };
