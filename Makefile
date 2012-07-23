@@ -18,8 +18,8 @@ build_hystograms: build_hystograms.o hystograms.o pgm.o
 local_threshold: local_threshold.o hystograms.o pgm.o
 	g++ -O3 -std=c++0x -o local_threshold local_threshold.o hystograms.o pgm.o
 
-classifier_bitonize: classifier_bitonize.o pgm.o
-	g++ -O3 -std=c++0x -o classifier_bitonize classifier_bitonize.o pgm.o
+classifier_bitonize: classifier_bitonize.o pgm.o disjoint_set_forest.o
+	g++ -O3 -std=c++0x -o classifier_bitonize classifier_bitonize.o pgm.o disjoint_set_forest.o
 
 bitonize.o: bitonize.cpp types.h constants.h
 	g++ -O3 -std=c++0x -c -o bitonize.o bitonize.cpp
@@ -39,7 +39,7 @@ build_hystograms.o: build_hystograms.cpp types.h pgm.h constants.h
 local_threshold.o: local_threshold.cpp types.h pgm.h constants.h
 	g++ -O3 -std=c++0x -c -o local_threshold.o local_threshold.cpp
 
-classifier_bitonize.o: classifier_bitonize.cpp types.h pgm.h constants.h
+classifier_bitonize.o: classifier_bitonize.cpp types.h pgm.h constants.h disjoint_set_forest.h
 	g++ -O3 -std=c++0x -c -o classifier_bitonize.o classifier_bitonize.cpp
 
 hystograms.o: hystograms.cpp types.h pgm.h constants.h
