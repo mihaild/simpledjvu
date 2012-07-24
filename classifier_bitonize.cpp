@@ -11,6 +11,9 @@
 #include "hystograms.h"
 #include "disjoint_set_forest.h"
 
+#include <sys/stat.h>
+#include <sys/types.h>
+
 using std::unordered_map;
 using std::vector;
 using std::min;
@@ -89,15 +92,6 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
         }
     }
 
-    /*byte *pixels = new byte[height*width];
-    for (int i = 0; i < height; ++i) {
-        for (int j = 0; j < width; ++j) {
-            pixels[i*width + j] = colors[i][j] ? (colors_canonical[colors[i][j]] * 255/colors_canonical.size()) : 0;
-        }
-    }
-    save_pgm(fopen("coloring.pbm", "wb"), pixels, width, height);
-    std::cout << "save coloring: OK\n";*/
-
     vector<ConnectedComponent *> result(colors_canonical.size());
     for (auto &i: result) {
         i = new ConnectedComponent();
@@ -119,8 +113,6 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
         i->form = bitonal_image(i->right - i->left + 1, vector<bool> (i->bottom - i->top + 1, false));
         for (auto &j : prev_level) {
             if (colors_forest.find(i->color) == colors_forest.find(j->color)) {
-                /*j->childs.push_back(i);
-                i->parent = j;*/
                 i->childs.push_back(j);
                 j->parent = i;
             }
@@ -136,12 +128,6 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
         }
     }
 
-    /*for (auto &i: result) {
-        char name[255];
-        sprintf(name, "components/%d.pbm", i.color);
-        i.save(fopen(name, "wb"));
-    }
-    std::cout << "forming: OK\n";*/
     return result;
 }
 
@@ -175,6 +161,21 @@ vector<vector<ConnectedComponent *> > build_connected_components_forest(byte *pi
     return result;
 }
 
+void save_component(ConnectedComponent component, std::string path) {
+    FILE *f;
+    char s[255];
+    mkdir(path.c_str(), 0777);
+    sprintf(s, "%d", component.color);
+    path += s;
+    f = fopen((path + ".pgm").c_str(), "wb");
+    component.save(f);
+    fclose(f);
+    path += "/";
+    for (auto &i : component.childs) {
+        save_component(*i, path);
+    }
+}
+
 int main(int argc, char *argv[]) {
     byte *pixels;
     int32 width, height, row_size, rows_count;
@@ -186,6 +187,10 @@ int main(int argc, char *argv[]) {
 
     //vector<ConnectedComponent> components = find_connected_components(threshold(pixels, width, height, 128));
     vector<vector<ConnectedComponent *> > connected_components_forest = build_connected_components_forest(pixels, width, height);
+    
+    std::cout << '\n';
+
+    save_component(*(connected_components_forest.back().back()), "forest/");
 
     return 0;
 }
