@@ -2,10 +2,13 @@
 
 #include <vector>
 
-const int MIN_LEVEL = 15;
-const int MAX_LEVEL = 255;
-const int LEVEL_STEP = 60;
+const int MIN_LEVEL = 10;
+const int MAX_LEVEL = 250;
+const int LEVEL_STEP = 15;
 const int LEVELS = (MAX_LEVEL - MIN_LEVEL) / LEVEL_STEP + 1;
+
+const int MIN_WIDTH = 4;
+const int MIN_HEIGHT = 4;
 
 using std::vector;
 

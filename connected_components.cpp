@@ -46,8 +46,8 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
 
     for (int i = 0; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
-            for (int k = -1; k <= 1; ++k) {
-                for (int l = -1; l <= 1; ++l) {
+            for (int k = 0; k <= 1; ++k) {
+                for (int l = 0; l <= 1; ++l) {
                     if (((i+k) >= 0) && ((i+k) < height) && ((j+l) >= 0) && ((j+l) < width) && image[i][j] && image[i+k][j+l]) {
                         colors_forest.unite(colors[i][j], colors[i+k][j+l]);
                     }
@@ -139,7 +139,7 @@ vector<vector<ConnectedComponent *> > build_connected_components_forest(byte *pi
 void save_component(ConnectedComponent component, std::string path) {
     FILE *f;
     char s[255];
-    if (component.right - component.left < 4 || component.bottom - component.top < 4) {
+    if (component.right - component.left < MIN_WIDTH || component.bottom - component.top < MIN_HEIGHT) {
         return;
     }
     mkdir(path.c_str(), 0777);

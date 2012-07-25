@@ -30,7 +30,9 @@ int main(int argc, char *argv[]) {
     //vector<ConnectedComponent> components = find_connected_components(threshold(pixels, width, height, 128));
     vector<vector<ConnectedComponent *> > connected_components_forest = build_connected_components_forest(pixels, width, height);
 
-    save_component(*(connected_components_forest.back().back()), "forest/");
+    for (const auto &i : connected_components_forest.back()) {
+        save_component(*i, "forest/");
+    }
 
     return 0;
 }
