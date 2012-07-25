@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
+#include <queue>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -13,19 +14,10 @@
 using std::unordered_map;
 using std::min;
 using std::max;
+using std::queue;
 
 void ConnectedComponent::save(FILE *file) const {
-    int height = form.size();
-    int width = form[0].size();
-    byte *colors = new byte[height * width];
-    byte *pointer = colors;
-    for (const auto &i : form) {
-        for (const auto &j : i) {
-            *(pointer++) = j;
-        }
-    }
-    save_pbm(file, colors, width, height, width, height);
-    delete colors;
+    save_pbm(file, form);
 }
 
 ConnectedComponent::ConnectedComponent(): left(999999), right(-1), top(999999), bottom(-1) {
@@ -90,10 +82,10 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
         for (int j = 0; j < width; ++j) {
             if (image[i][j]) {
                 ConnectedComponent &component = *tmp_result[colors_canonical[colors[i][j]]];
-                component.left = min(component.left, i);
-                component.right = max(component.right, i);
-                component.top = min(component.top, j);
-                component.bottom = max(component.bottom, j);
+                component.left = min(component.left, j);
+                component.right = max(component.right, j);
+                component.top = min(component.top, i);
+                component.bottom = max(component.bottom, i);
                 component.color = colors[i][j];
             }
         }
@@ -113,7 +105,7 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
     }
 
     for (auto &i : result) {
-        i->form = bitonal_image(i->width(), vector<bool> (i->height(), false));
+        i->form = bitonal_image(i->height(), vector<bool> (i->width(), false));
         for (int j = 0; j < prev_level.size(); ++j) {
             if (colors_forest.find(i->color) == colors_forest.find(prev_level[j]->color)) {
                 i->childs.push_back(j);
@@ -125,7 +117,7 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
         for (int j = 0; j < width; ++j) {
             if (image[i][j] && colors_canonical.count(colors[i][j])) {
                 ConnectedComponent &component = *result[colors_canonical[colors[i][j]]];
-                component.form.at(i - component.left).at(j - component.top) = true;
+                component.form[i - component.top][j - component.left] = true;
             }
         }
     }
@@ -177,5 +169,58 @@ void ConnectedComponentForest::save_component(std::string path, int level, int n
 void ConnectedComponentForest::save(std::string path) const {
     for (int i = 0; i < components.back().size(); ++i) {
         save_component(path, components.size() - 1, i);
+    }
+}
+
+double ConnectedComponentForest::component_quality(const ConnectedComponent &component) const {
+    return -1./component.height();
+}
+
+vector<ConnectedComponent *> ConnectedComponentForest::get_best_subset() {
+    vector<vector<double > > qualities(components.size());
+    for (int i = 0; i < components.size(); ++i) {
+        qualities[i].resize(components[i].size());
+        for (int j = 0; j < components[i].size(); ++j) {
+            qualities[i][j] = component_quality(*components[i][j]);
+        }
+    }
+    vector<vector<double> > best_by_subtree(components.size());
+    for (int i = 0; i < best_by_subtree.size(); ++i) {
+        best_by_subtree[i].resize(components[i].size());
+        for (int j = 0; j < best_by_subtree[i].size(); ++j) {
+            double cur_best_by_subtree(0);
+            for (int k : components[i][j]->childs) {
+                cur_best_by_subtree += best_by_subtree[i - 1][k];
+            }
+            best_by_subtree[i][j] = cur_best_by_subtree;
+        }
+    }
+    queue<ipair> take;
+    for (int i = 0; i < best_by_subtree.back().size(); ++i) {
+        take.emplace(best_by_subtree.size() - 1, i);
+    }
+    vector<ConnectedComponent *> result;
+    while (!take.empty()) {
+        ipair target = take.front();
+        take.pop();
+        if (best_by_subtree[target.first][target.second] > qualities[target.first][target.second]) {
+            for (int i : components[target.first][target.second]->childs) {
+                take.emplace(target.first - 1, i);
+            }
+        }
+        else {
+            result.push_back(components[target.first][target.second]);
+        }
+    }
+    return result;
+}
+
+void place_components(const vector<ConnectedComponent *> components, bitonal_image &image) {
+    for (const auto& component : components) {
+        for (int i = 0; i < component->height(); ++i) {
+            for (int j = 0; j < component->width(); ++j) {
+                image[i + component->top][j + component->left] = component->form[i][j];
+            }
+        }
     }
 }

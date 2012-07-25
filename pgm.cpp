@@ -139,3 +139,17 @@ void save_pbm(FILE *f, byte *colors, int32 width, int32 height, int32 row_size, 
     free(row);
     free(packed_row);
 }
+
+void save_pbm(FILE *f, const bitonal_image &image) {
+    int height = image.size();
+    int width = image[0].size();
+    byte *colors = new byte[height * width];
+    byte *pointer = colors;
+    for (const auto &i : image) {
+        for (const auto &j : i) {
+            *(pointer++) = j;
+        }
+    }
+    save_pbm(f, colors, width, height, width, height);
+    delete colors;
+}

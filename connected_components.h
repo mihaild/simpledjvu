@@ -33,6 +33,10 @@ struct ConnectedComponentForest {
     }
     void save(std::string path) const;
     void save_component(std::string path, int level, int number) const;
+    double component_quality(const ConnectedComponent &component) const;
+    vector<ConnectedComponent *> get_best_subset();
 };
 
 ConnectedComponentForest build_connected_components_forest(byte *pixels, int width, int height);
+
+void place_components(const vector<ConnectedComponent *> components, bitonal_image &image);
