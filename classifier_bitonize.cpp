@@ -27,12 +27,10 @@ int main(int argc, char *argv[]) {
 
     fclose(data);
 
-    //vector<ConnectedComponent> components = find_connected_components(threshold(pixels, width, height, 128));
-    vector<vector<ConnectedComponent *> > connected_components_forest = build_connected_components_forest(pixels, width, height);
+    ConnectedComponentForest connected_components_forest = build_connected_components_forest(pixels, width, height);
 
-    for (const auto &i : connected_components_forest.back()) {
-        save_component(*i, "forest/");
-    }
+    std::cerr << "saving\n";
+    connected_components_forest.save("forest/");
 
     return 0;
 }

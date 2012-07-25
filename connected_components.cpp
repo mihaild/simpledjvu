@@ -1,6 +1,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <iostream>
+#include <string>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -13,7 +14,7 @@ using std::unordered_map;
 using std::min;
 using std::max;
 
-void ConnectedComponent::save(FILE *file) {
+void ConnectedComponent::save(FILE *file) const {
     int height = form.size();
     int width = form[0].size();
     byte *colors = new byte[height * width];
@@ -27,14 +28,14 @@ void ConnectedComponent::save(FILE *file) {
     delete colors;
 }
 
-ConnectedComponent::ConnectedComponent(): left(999999), right(-1), top(999999), bottom(-1), parent(NULL) {
+ConnectedComponent::ConnectedComponent(): left(999999), right(-1), top(999999), bottom(-1) {
 }
 
-inline int ConnectedComponent::width() {
+inline int ConnectedComponent::width() const {
     return right - left + 1;
 }
 
-inline int ConnectedComponent::height() {
+inline int ConnectedComponent::height() const {
     return bottom - top + 1;
 }
 
@@ -113,10 +114,9 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
 
     for (auto &i : result) {
         i->form = bitonal_image(i->width(), vector<bool> (i->height(), false));
-        for (auto &j : prev_level) {
-            if (colors_forest.find(i->color) == colors_forest.find(j->color)) {
+        for (int j = 0; j < prev_level.size(); ++j) {
+            if (colors_forest.find(i->color) == colors_forest.find(prev_level[j]->color)) {
                 i->childs.push_back(j);
-                j->parent = i;
             }
         }
     }
@@ -133,7 +133,7 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
     return result;
 }
 
-vector<vector<ConnectedComponent *> > build_connected_components_forest(byte *pixels, int width, int height) {
+ConnectedComponentForest build_connected_components_forest(byte *pixels, int width, int height) {
     vector<vector<ConnectedComponent *> > result(LEVELS);
     vector<vector<int> > colors(height, vector<int> (width, 0));
     int active_color(0);
@@ -158,17 +158,24 @@ vector<vector<ConnectedComponent *> > build_connected_components_forest(byte *pi
     return result;
 }
 
-void save_component(ConnectedComponent component, std::string path) {
+void ConnectedComponentForest::save_component(std::string path, int level, int number) const {
     FILE *f;
     char s[255];
+    ConnectedComponent *component = components[level][number];
     mkdir(path.c_str(), 0777);
-    sprintf(s, "%d", component.color);
+    sprintf(s, "%d", component->color);
     path += s;
     f = fopen((path + ".pgm").c_str(), "wb");
-    component.save(f);
+    component->save(f);
     fclose(f);
     path += "/";
-    for (auto &i : component.childs) {
-        save_component(*i, path);
+    for (auto &i : component->childs) {
+        save_component(path, level-1, i);
+    }
+}
+
+void ConnectedComponentForest::save(std::string path) const {
+    for (int i = 0; i < components.back().size(); ++i) {
+        save_component(path, components.size() - 1, i);
     }
 }

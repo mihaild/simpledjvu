@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 const int MIN_LEVEL = 10;
 const int MAX_LEVEL = 250;
@@ -19,14 +20,19 @@ struct ConnectedComponent {
     int bottom;
     int color;
     bitonal_image form;
-    ConnectedComponent *parent;
-    vector<ConnectedComponent *> childs;
-    void save(FILE *file);
+    vector<int> childs;
+    void save(FILE *file) const;
     ConnectedComponent();
-    int width();
-    int height();
+    int width() const;
+    int height() const;
 };
 
-vector<vector<ConnectedComponent *> > build_connected_components_forest(byte *pixels, int width, int height);
+struct ConnectedComponentForest {
+    const vector<vector<ConnectedComponent *> > components;
+    ConnectedComponentForest(const vector<vector<ConnectedComponent *> > &components): components(components) {
+    }
+    void save(std::string path) const;
+    void save_component(std::string path, int level, int number) const;
+};
 
-void save_component(ConnectedComponent component, std::string path);
+ConnectedComponentForest build_connected_components_forest(byte *pixels, int width, int height);
