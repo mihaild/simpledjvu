@@ -25,11 +25,11 @@ void ConnectedComponent::save(FILE *file) const {
 ConnectedComponent::ConnectedComponent(): left(999999), right(-1), top(999999), bottom(-1) {
 }
 
-inline int ConnectedComponent::width() const {
+int ConnectedComponent::width() const {
     return right - left + 1;
 }
 
-inline int ConnectedComponent::height() const {
+int ConnectedComponent::height() const {
     return bottom - top + 1;
 }
 
@@ -128,7 +128,7 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
 }
 
 ConnectedComponentForest build_connected_components_forest(byte *pixels, int width, int height) {
-    vector<vector<ConnectedComponent *> > result(LEVELS);
+    vector<vector<ConnectedComponent *> > result;//(LEVELS);
     vector<vector<int> > colors(height, vector<int> (width, 0));
     int active_color(0);
     for (int i = 0; i < height; ++i) {
@@ -140,14 +140,18 @@ ConnectedComponentForest build_connected_components_forest(byte *pixels, int wid
     for (int i = 0, level = MIN_LEVEL; level <= MAX_LEVEL; ++i, level += LEVEL_STEP) {
         std::cerr << "Level: " << level << "; ";
         bitonal_image image = threshold(pixels, width, height, level);
-        if (!i) {
+        vector<ConnectedComponent *> components;
+        if (result.empty()) {
             vector<ConnectedComponent *> tmp;
-            result[i] = find_connected_components(image, colors, colors_forest, i == 0 ? tmp : result[i-1]);
+            components = find_connected_components(image, colors, colors_forest, tmp);
         }
         else {
-            result[i] = find_connected_components(image, colors, colors_forest, result[i-1]);
+            components = find_connected_components(image, colors, colors_forest, result.back());
         }
-        std::cerr << "components: " << (result[i].size()) << '\n';
+        if (!components.empty()) {
+            result.push_back(components);
+        }
+        std::cerr << "components: " << (components.size()) << '\n';
     }
     return result;
 }
@@ -179,20 +183,26 @@ double ConnectedComponentForest::component_quality(const ConnectedComponent &com
 }
 
 vector<ConnectedComponent *> ConnectedComponentForest::get_best_subset() {
+    AreaFeatureGetter area_feature_getter(*this);
+    HystogramQualifier area_qualifier(&area_feature_getter, *this);
+    std::cout << "qualifier: OK\n";
+
     vector<vector<double > > qualities(components.size());
     for (int i = 0; i < components.size(); ++i) {
         qualities[i].resize(components[i].size());
         for (int j = 0; j < components[i].size(); ++j) {
-            qualities[i][j] = component_quality(*components[i][j]);
+            qualities[i][j] = area_qualifier.quality(*components[i][j]);
         }
     }
+    std::cout << "qualities: OK\n";
+
     vector<vector<double> > best_by_subtree(components.size());
     for (int i = 0; i < best_by_subtree.size(); ++i) {
         best_by_subtree[i].resize(components[i].size());
         for (int j = 0; j < best_by_subtree[i].size(); ++j) {
             double cur_best_by_subtree(0);
             for (int k : components[i][j]->childs) {
-                cur_best_by_subtree += best_by_subtree[i - 1][k];
+                cur_best_by_subtree += max(best_by_subtree[i - 1][k], qualities[i - 1][k]);
             }
             best_by_subtree[i][j] = cur_best_by_subtree;
         }
@@ -214,6 +224,7 @@ vector<ConnectedComponent *> ConnectedComponentForest::get_best_subset() {
             result.push_back(components[target.first][target.second]);
         }
     }
+    std::cout << "best components: OK\n";
     return result;
 }
 

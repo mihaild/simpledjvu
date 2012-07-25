@@ -23,8 +23,8 @@ struct ConnectedComponent {
     int color;
     bitonal_image form;
     vector<int> childs;
-    void save(FILE *file) const;
     ConnectedComponent();
+    void save(FILE *file) const;
     int width() const;
     int height() const;
 };
