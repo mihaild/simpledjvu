@@ -21,3 +21,5 @@ struct LevelsDistribution {
 typedef vector<vector<LevelsDistribution> > GlobalLevelsDistribution;
 
 typedef pair<int, int> ipair;
+
+typedef vector<vector<bool> > bitonal_image;

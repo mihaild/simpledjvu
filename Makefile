@@ -22,8 +22,8 @@ build_hystograms: build/build_hystograms.o build/hystograms.o build/pgm.o
 local_threshold: build/local_threshold.o build/hystograms.o build/pgm.o
 	$(CC) -o local_threshold build/local_threshold.o build/hystograms.o build/pgm.o
 
-classifier_bitonize: build/classifier_bitonize.o build/pgm.o build/disjoint_set_forest.o
-	$(CC) -o classifier_bitonize build/classifier_bitonize.o build/pgm.o build/disjoint_set_forest.o
+classifier_bitonize: build/classifier_bitonize.o build/pgm.o build/disjoint_set_forest.o build/connected_components.o
+	$(CC) -o classifier_bitonize build/classifier_bitonize.o build/pgm.o build/disjoint_set_forest.o build/connected_components.o
 
 build/bitonize.o: bitonize.cpp types.h constants.h
 	$(CC) -c -o build/bitonize.o bitonize.cpp
@@ -43,7 +43,7 @@ build/build_hystograms.o: build_hystograms.cpp types.h pgm.h constants.h
 build/local_threshold.o: local_threshold.cpp types.h pgm.h constants.h
 	$(CC) -c -o build/local_threshold.o local_threshold.cpp
 
-build/classifier_bitonize.o: classifier_bitonize.cpp types.h pgm.h constants.h disjoint_set_forest.h
+build/classifier_bitonize.o: classifier_bitonize.cpp types.h pgm.h constants.h disjoint_set_forest.h connected_components.h
 	$(CC) -c -o build/classifier_bitonize.o classifier_bitonize.cpp
 
 build/hystograms.o: hystograms.cpp types.h pgm.h constants.h
@@ -54,6 +54,9 @@ build/pgm.o: pgm.cpp types.h constants.h
 
 build/disjoint_set_forest.o: disjoint_set_forest.cpp disjoint_set_forest.h
 	$(CC) -c -o build/disjoint_set_forest.o disjoint_set_forest.cpp
+
+build/connected_components.o: connected_components.cpp connected_components.h
+	$(CC) -c -o build/connected_components.o connected_components.cpp
 
 clean:
 	rm -f build/* $(BIN_FILES)
