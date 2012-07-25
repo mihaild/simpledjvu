@@ -30,6 +30,14 @@ void ConnectedComponent::save(FILE *file) {
 ConnectedComponent::ConnectedComponent(): left(999999), right(-1), top(999999), bottom(-1), parent(NULL) {
 }
 
+inline int ConnectedComponent::width() {
+    return right - left + 1;
+}
+
+inline int ConnectedComponent::height() {
+    return bottom - top + 1;
+}
+
 bitonal_image threshold(byte *pixels, int width, int height, byte level) {
     bitonal_image result(height, vector<bool> (width));
     for (int i = 0; i < width; ++i) {
@@ -61,25 +69,26 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
             colors[i][j] = colors_forest.find(colors[i][j]);
         }
     }
+
     unordered_map<int, int> colors_canonical;
     for (int i = 0; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
             if (image[i][j]) {
                 if (!colors_canonical.count(colors[i][j])) {
-                    colors_canonical[colors[i][j]] = colors_canonical.size();
+                    colors_canonical[colors[i][j]] = colors_canonical.size() - 1;
                 }
             }
         }
     }
 
-    vector<ConnectedComponent *> result(colors_canonical.size());
-    for (auto &i: result) {
+    vector<ConnectedComponent *> tmp_result(colors_canonical.size());
+    for (auto &i: tmp_result) {
         i = new ConnectedComponent();
     }
     for (int i = 0; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
             if (image[i][j]) {
-                ConnectedComponent &component = *result[colors_canonical[colors[i][j]] - 1];
+                ConnectedComponent &component = *tmp_result[colors_canonical[colors[i][j]]];
                 component.left = min(component.left, i);
                 component.right = max(component.right, i);
                 component.top = min(component.top, j);
@@ -89,8 +98,21 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
         }
     }
 
+    vector<ConnectedComponent *> result;
+
+    for (int i = 0; i < tmp_result.size(); ++i) {
+        if (tmp_result[i]->width() < MIN_WIDTH || tmp_result[i]->height() < MIN_HEIGHT) {
+            colors_canonical.erase(tmp_result[i]->color);
+            delete tmp_result[i];
+        }
+        else {
+            colors_canonical[tmp_result[i]->color] = result.size();
+            result.push_back(tmp_result[i]);
+        }
+    }
+
     for (auto &i : result) {
-        i->form = bitonal_image(i->right - i->left + 1, vector<bool> (i->bottom - i->top + 1, false));
+        i->form = bitonal_image(i->width(), vector<bool> (i->height(), false));
         for (auto &j : prev_level) {
             if (colors_forest.find(i->color) == colors_forest.find(j->color)) {
                 i->childs.push_back(j);
@@ -101,8 +123,8 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
 
     for (int i = 0; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
-            if (image[i][j]) {
-                ConnectedComponent &component = *result[colors_canonical[colors[i][j]] - 1];
+            if (image[i][j] && colors_canonical.count(colors[i][j])) {
+                ConnectedComponent &component = *result[colors_canonical[colors[i][j]]];
                 component.form.at(i - component.left).at(j - component.top) = true;
             }
         }
@@ -139,9 +161,6 @@ vector<vector<ConnectedComponent *> > build_connected_components_forest(byte *pi
 void save_component(ConnectedComponent component, std::string path) {
     FILE *f;
     char s[255];
-    if (component.right - component.left < MIN_WIDTH || component.bottom - component.top < MIN_HEIGHT) {
-        return;
-    }
     mkdir(path.c_str(), 0777);
     sprintf(s, "%d", component.color);
     path += s;

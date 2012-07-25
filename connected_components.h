@@ -23,6 +23,8 @@ struct ConnectedComponent {
     vector<ConnectedComponent *> childs;
     void save(FILE *file);
     ConnectedComponent();
+    int width();
+    int height();
 };
 
 vector<vector<ConnectedComponent *> > build_connected_components_forest(byte *pixels, int width, int height);
