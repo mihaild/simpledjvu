@@ -1,55 +1,59 @@
-all: bitonize remove_background decrease_colors_count bitonize_threshold build_hystograms local_threshold classifier_bitonize
+CC = g++ -O3 -std=c++0x
 
-bitonize: bitonize.o pgm.o
-	g++ -O3 -std=c++0x -o bitonize bitonize.o pgm.o
+BIN_FILES = bitonize remove_background decrease_colors_count bitonize_threshold build_hystograms local_threshold classifier_bitonize
 
-remove_background: remove_background.o pgm.o
-	g++ -O3 -std=c++0x -o remove_background remove_background.o pgm.o
+all: $(BIN_FILES)
 
-decrease_colors_count: decrease_colors_count.o pgm.o
-	g++ -O3 -std=c++0x -o decrease_colors_count decrease_colors_count.o pgm.o
+bitonize: build/bitonize.o build/pgm.o
+	$(CC) -o bitonize build/bitonize.o build/pgm.o
 
-bitonize_threshold: bitonize_threshold.o pgm.o
-	g++ -O3 -std=c++0x -o bitonize_threshold bitonize_threshold.o pgm.o
+remove_background: build/remove_background.o build/pgm.o
+	$(CC) -o remove_background build/remove_background.o build/pgm.o
 
-build_hystograms: build_hystograms.o hystograms.o pgm.o
-	g++ -O3 -std=c++0x -o build_hystograms build_hystograms.o hystograms.o pgm.o
+decrease_colors_count: build/decrease_colors_count.o build/pgm.o
+	$(CC) -o decrease_colors_count build/decrease_colors_count.o build/pgm.o
 
-local_threshold: local_threshold.o hystograms.o pgm.o
-	g++ -O3 -std=c++0x -o local_threshold local_threshold.o hystograms.o pgm.o
+bitonize_threshold: build/bitonize_threshold.o build/pgm.o
+	$(CC) -o bitonize_threshold build/bitonize_threshold.o build/pgm.o
 
-classifier_bitonize: classifier_bitonize.o pgm.o disjoint_set_forest.o
-	g++ -O3 -std=c++0x -o classifier_bitonize classifier_bitonize.o pgm.o disjoint_set_forest.o
+build_hystograms: build/build_hystograms.o build/hystograms.o build/pgm.o
+	$(CC) -o build_hystograms build/build_hystograms.o build/hystograms.o build/pgm.o
 
-bitonize.o: bitonize.cpp types.h constants.h
-	g++ -O3 -std=c++0x -c -o bitonize.o bitonize.cpp
+local_threshold: build/local_threshold.o build/hystograms.o build/pgm.o
+	$(CC) -o local_threshold build/local_threshold.o build/hystograms.o build/pgm.o
 
-remove_background.o: remove_background.cpp types.h pgm.h constants.h
-	g++ -O3 -std=c++0x -c -o remove_background.o remove_background.cpp
+classifier_bitonize: build/classifier_bitonize.o build/pgm.o build/disjoint_set_forest.o
+	$(CC) -o classifier_bitonize build/classifier_bitonize.o build/pgm.o build/disjoint_set_forest.o
 
-decrease_colors_count.o: decrease_colors_count.cpp types.h pgm.h constants.h
-	g++ -O3 -std=c++0x -c -o decrease_colors_count.o decrease_colors_count.cpp
+build/bitonize.o: bitonize.cpp types.h constants.h
+	$(CC) -c -o build/bitonize.o bitonize.cpp
 
-bitonize_threshold.o: bitonize_threshold.cpp types.h pgm.h constants.h
-	g++ -O3 -std=c++0x -c -o bitonize_threshold.o bitonize_threshold.cpp
+build/remove_background.o: remove_background.cpp types.h pgm.h constants.h
+	$(CC) -c -o build/remove_background.o remove_background.cpp
 
-build_hystograms.o: build_hystograms.cpp types.h pgm.h constants.h
-	g++ -O3 -std=c++0x -c -o build_hystograms.o build_hystograms.cpp
+build/decrease_colors_count.o: decrease_colors_count.cpp types.h pgm.h constants.h
+	$(CC) -c -o build/decrease_colors_count.o decrease_colors_count.cpp
 
-local_threshold.o: local_threshold.cpp types.h pgm.h constants.h
-	g++ -O3 -std=c++0x -c -o local_threshold.o local_threshold.cpp
+build/bitonize_threshold.o: bitonize_threshold.cpp types.h pgm.h constants.h
+	$(CC) -c -o build/bitonize_threshold.o bitonize_threshold.cpp
 
-classifier_bitonize.o: classifier_bitonize.cpp types.h pgm.h constants.h disjoint_set_forest.h
-	g++ -O3 -std=c++0x -c -o classifier_bitonize.o classifier_bitonize.cpp
+build/build_hystograms.o: build_hystograms.cpp types.h pgm.h constants.h
+	$(CC) -c -o build/build_hystograms.o build_hystograms.cpp
 
-hystograms.o: hystograms.cpp types.h pgm.h constants.h
-	g++ -O3 -std=c++0x -c -o hystograms.o hystograms.cpp
+build/local_threshold.o: local_threshold.cpp types.h pgm.h constants.h
+	$(CC) -c -o build/local_threshold.o local_threshold.cpp
 
-pgm.o: pgm.cpp types.h constants.h
-	g++ -O3 -std=c++0x -c -o pgm.o pgm.cpp
+build/classifier_bitonize.o: classifier_bitonize.cpp types.h pgm.h constants.h disjoint_set_forest.h
+	$(CC) -c -o build/classifier_bitonize.o classifier_bitonize.cpp
 
-disjoint_set_forest.o: disjoint_set_forest.cpp disjoint_set_forest.h
-	g++ -O3 -std=c++0x -c -o disjoint_set_forest.o disjoint_set_forest.cpp
+build/hystograms.o: hystograms.cpp types.h pgm.h constants.h
+	$(CC) -c -o build/hystograms.o hystograms.cpp
+
+build/pgm.o: pgm.cpp types.h constants.h
+	$(CC) -c -o build/pgm.o pgm.cpp
+
+build/disjoint_set_forest.o: disjoint_set_forest.cpp disjoint_set_forest.h
+	$(CC) -c -o build/disjoint_set_forest.o disjoint_set_forest.cpp
 
 clean:
-	rm -f pgm.o bitonize.o remove_background.o decrease_colors_count.o hystograms.o classifier_bitonize.o disjoint_set_forest.o bitonize remove_background decrease_colors_count bitonize_threshold build_hystograms classifier_bitonize
+	rm -f build/* $(BIN_FILES)
