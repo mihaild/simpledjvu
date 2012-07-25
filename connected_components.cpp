@@ -11,6 +11,8 @@
 #include "pgm.h"
 #include "connected_components.h"
 
+#include "quality.h"
+
 using std::unordered_map;
 using std::min;
 using std::max;
@@ -223,4 +225,30 @@ void place_components(const vector<ConnectedComponent *> components, bitonal_ima
             }
         }
     }
+}
+
+const ConnectedComponent& ConnectedComponentForest::ConnectedComponentForestForwardIterator::operator *() {
+    return *(forest.components[level][number]);
+}
+ConnectedComponentForest::ConnectedComponentForestForwardIterator& ConnectedComponentForest::ConnectedComponentForestForwardIterator::operator ++() {
+    if (number < forest.components[level].size() - 1) {
+        ++number;
+    }
+    else {
+        number = 0;
+        ++level;
+    }
+    return *this;
+}
+bool ConnectedComponentForest::ConnectedComponentForestForwardIterator::operator !=(const ConnectedComponentForestForwardIterator &other) const {
+    return number != other.number || level != other.level;
+}
+ConnectedComponentForest::ConnectedComponentForestForwardIterator::ConnectedComponentForestForwardIterator(int level, int number, const ConnectedComponentForest &forest): level(level), number(number), forest(forest) {
+}
+
+ConnectedComponentForest::ConnectedComponentForestForwardIterator ConnectedComponentForest::begin() const {
+    return ConnectedComponentForestForwardIterator(0, 0, *this);
+}
+ConnectedComponentForest::ConnectedComponentForestForwardIterator ConnectedComponentForest::end() const {
+    return ConnectedComponentForestForwardIterator(components.size(), 0, *this);
 }
