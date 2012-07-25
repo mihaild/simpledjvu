@@ -6,6 +6,7 @@
 
 using std::array;
 using std::vector;
+using std::pair;
 
 typedef int int32;
 typedef unsigned char byte;
@@ -18,3 +19,5 @@ struct LevelsDistribution {
 };
 
 typedef vector<vector<LevelsDistribution> > GlobalLevelsDistribution;
+
+typedef pair<int, int> ipair;
