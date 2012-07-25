@@ -164,6 +164,9 @@ vector<vector<ConnectedComponent *> > build_connected_components_forest(byte *pi
 void save_component(ConnectedComponent component, std::string path) {
     FILE *f;
     char s[255];
+    if (component.right - component.left < 4 || component.bottom - component.top < 4) {
+        return;
+    }
     mkdir(path.c_str(), 0777);
     sprintf(s, "%d", component.color);
     path += s;
@@ -187,8 +190,6 @@ int main(int argc, char *argv[]) {
 
     //vector<ConnectedComponent> components = find_connected_components(threshold(pixels, width, height, 128));
     vector<vector<ConnectedComponent *> > connected_components_forest = build_connected_components_forest(pixels, width, height);
-    
-    std::cout << '\n';
 
     save_component(*(connected_components_forest.back().back()), "forest/");
 
