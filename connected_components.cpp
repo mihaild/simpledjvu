@@ -153,7 +153,13 @@ ConnectedComponentForest build_connected_components_forest(byte *pixels, int wid
         }
         std::cerr << "components: " << (components.size()) << '\n';
     }
-    return result;
+    GrayImage image(height, vector<byte> (width));
+    for (int i = 0; i < width; ++i) {
+        for (int j = 0; j < height; ++j) {
+            image[j][i] = pixels[j*width + i];
+        }
+    }
+    return ConnectedComponentForest(result, image);
 }
 
 void ConnectedComponentForest::save_component(std::string path, int level, int number) const {
@@ -183,15 +189,22 @@ double ConnectedComponentForest::component_quality(const ConnectedComponent &com
 }
 
 vector<ConnectedComponent *> ConnectedComponentForest::get_best_subset() {
-    AreaFeatureGetter area_feature_getter(*this);
-    HystogramQualifier area_qualifier(&area_feature_getter, *this);
+    vector<HystogramQualifier> qualifiers;
+    ExternalFeautureGetter height_feature_getter(*this, feature_height);
+    ExternalFeautureGetter width_feature_getter(*this, feature_width);
+    /*HystogramQualifier area_qualifier(&height_feature_getter, *this);*/
+    qualifiers.push_back(HystogramQualifier(&height_feature_getter, *this));
+    qualifiers.push_back(HystogramQualifier(&width_feature_getter, *this));
     std::cout << "qualifier: OK\n";
 
     vector<vector<double > > qualities(components.size());
     for (int i = 0; i < components.size(); ++i) {
         qualities[i].resize(components[i].size());
         for (int j = 0; j < components[i].size(); ++j) {
-            qualities[i][j] = area_qualifier.quality(*components[i][j]);
+            qualities[i][j] = 0.0;
+            for (const auto &qualifier : qualifiers) {
+                qualities[i][j] += qualifier.quality(*components[i][j]);
+            }
         }
     }
     std::cout << "qualities: OK\n";

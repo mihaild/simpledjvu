@@ -5,9 +5,9 @@
 
 #include "types.h"
 
-const int MIN_LEVEL = 10;
-const int MAX_LEVEL = 250;
-const int LEVEL_STEP = 15;
+const int MIN_LEVEL = 0;
+const int MAX_LEVEL = 255;
+const int LEVEL_STEP = 1;
 const int LEVELS = (MAX_LEVEL - MIN_LEVEL) / LEVEL_STEP + 1;
 
 const int MIN_WIDTH = 4;
@@ -30,8 +30,9 @@ struct ConnectedComponent {
 };
 
 struct ConnectedComponentForest {
+    const GrayImage &image;
     const vector<vector<ConnectedComponent *> > components;
-    ConnectedComponentForest(const vector<vector<ConnectedComponent *> > &components): components(components) {
+    ConnectedComponentForest(const vector<vector<ConnectedComponent *> > &components, const GrayImage &image): components(components), image(image) {
     }
     void save(std::string path) const;
     void save_component(std::string path, int level, int number) const;
