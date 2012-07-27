@@ -7,7 +7,7 @@
 
 const int MIN_LEVEL = 0;
 const int MAX_LEVEL = 255;
-const int LEVEL_STEP = 1;
+const int LEVEL_STEP = 15;
 const int LEVELS = (MAX_LEVEL - MIN_LEVEL) / LEVEL_STEP + 1;
 
 const int MIN_WIDTH = 4;
@@ -30,7 +30,7 @@ struct ConnectedComponent {
 };
 
 struct ConnectedComponentForest {
-    const GrayImage &image;
+    const GrayImage image;
     const vector<vector<ConnectedComponent *> > components;
     ConnectedComponentForest(const vector<vector<ConnectedComponent *> > &components, const GrayImage &image): components(components), image(image) {
     }

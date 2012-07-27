@@ -33,11 +33,9 @@ int main(int argc, char *argv[]) {
     connected_components_forest.save("forest/");
 
     vector<ConnectedComponent *> ok_components = connected_components_forest.get_best_subset();
-    std::cout << "line 36\n";
 
     bitonal_image image = bitonal_image(height, vector<bool> (width, false));
 
-    std::cout << "line 39\n";
     std::cerr << "ok components: " << ok_components.size() << '\n';
 
     place_components(ok_components, image);
