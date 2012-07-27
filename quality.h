@@ -37,6 +37,7 @@ class ExternalFeautureGetter: public AbstractFeatureGetter {
 };
 
 int gradient(const ConnectedComponent &component, const GrayImage &image);
+int border_length(const ConnectedComponent &component, int width, int height);
 
 class GradientFeatureGetter: public AbstractFeatureGetter {
     private:

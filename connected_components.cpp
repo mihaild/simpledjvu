@@ -193,24 +193,24 @@ vector<ConnectedComponent *> ConnectedComponentForest::get_best_subset() {
     ExternalFeautureGetter height_feature_getter(*this, feature_height);
     ExternalFeautureGetter width_feature_getter(*this, feature_width);
     /*HystogramQualifier area_qualifier(&height_feature_getter, *this);*/
-    /*qualifiers.push_back(HystogramQualifier(&height_feature_getter, *this));
-    qualifiers.push_back(HystogramQualifier(&width_feature_getter, *this));*/
+    qualifiers.push_back(HystogramQualifier(&height_feature_getter, *this));
+    qualifiers.push_back(HystogramQualifier(&width_feature_getter, *this));
     GradientFeatureGetter gradient_feature_getter(*this);
-    std::cout << gradient_feature_getter.min() << ' ' << gradient_feature_getter.max() << '\n';
-    std::cout << "qualifier: OK\n";
+    //std::cout << gradient_feature_getter.min() << ' ' << gradient_feature_getter.max() << '\n';
+    std::cerr << "qualifier: OK\n";
 
     vector<vector<double > > qualities(components.size());
     for (int i = 0; i < components.size(); ++i) {
         qualities[i].resize(components[i].size());
         for (int j = 0; j < components[i].size(); ++j) {
             qualities[i][j] = 0.0;
-            /*for (const auto &qualifier : qualifiers) {
+            for (const auto &qualifier : qualifiers) {
                 qualities[i][j] += qualifier.quality(*components[i][j]);
-            }*/
-            qualities[i][j] = gradient_feature_getter.get_feature(*components[i][j]);// - gradient_feature_getter.max() / 100;
+            }
+            qualities[i][j] *= (gradient_feature_getter.get_feature(*components[i][j]) / gradient_feature_getter.max() - 0.4);// - gradient_feature_getter.max() / 4;
         }
     }
-    std::cout << "qualities: OK\n";
+    std::cerr << "qualities: OK\n";
 
     vector<vector<double> > best_by_subtree(components.size());
     for (int i = 0; i < best_by_subtree.size(); ++i) {
@@ -240,7 +240,7 @@ vector<ConnectedComponent *> ConnectedComponentForest::get_best_subset() {
             result.push_back(components[target.first][target.second]);
         }
     }
-    std::cout << "best components: OK\n";
+    std::cerr << "best components: OK\n";
     return result;
 }
 
