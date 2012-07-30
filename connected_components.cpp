@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <queue>
+#include <cmath>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -168,11 +169,12 @@ void ConnectedComponentForest::save_component(std::string path, int level, int n
     ConnectedComponent *component = components[level][number];
     mkdir(path.c_str(), 0777);
     sprintf(s, "%d", component->color);
-    path += s;
-    f = fopen((path + ".pgm").c_str(), "wb");
+    path += s;// + '/';
+    path += '/';
+    mkdir(path.c_str(), 0777);
+    f = fopen((path + "image.pgm").c_str(), "wb");
     component->save(f);
     fclose(f);
-    path += "/";
     for (auto &i : component->childs) {
         save_component(path, level-1, i);
     }
