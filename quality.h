@@ -6,6 +6,13 @@
 
 using std::vector;
 
+class QualifierInterface {
+    public:
+        virtual double quality(const ConnectedComponent &component) const = 0;
+        virtual ~QualifierInterface() {
+        }
+};
+
 class AbstractFeatureGetter {
     public:
         virtual double max() const = 0;
@@ -25,7 +32,7 @@ class AreaFeatureGetter: public AbstractFeatureGetter {
         virtual int get_feature(const ConnectedComponent &component) const;
 };*/
 
-class ExternalFeautureGetter: public AbstractFeatureGetter {
+class ExternalFeautureGetter: public AbstractFeatureGetter, public QualifierInterface {
     private:
         double _min, _max;
         double (*func)(const ConnectedComponent &);
@@ -34,12 +41,13 @@ class ExternalFeautureGetter: public AbstractFeatureGetter {
         virtual double max() const;
         virtual double min() const;
         virtual double get_feature(const ConnectedComponent &component) const;
+        virtual double quality(const ConnectedComponent &component) const;
 };
 
 int gradient(const ConnectedComponent &component, const GrayImage &image);
 int border_length(const ConnectedComponent &component, int width, int height);
 
-class GradientFeatureGetter: public AbstractFeatureGetter {
+class GradientFeatureGetter: public AbstractFeatureGetter, public QualifierInterface {
     private:
         double _min, _max;
         const GrayImage &image;
@@ -48,15 +56,16 @@ class GradientFeatureGetter: public AbstractFeatureGetter {
         virtual double max() const;
         virtual double min() const;
         virtual double get_feature(const ConnectedComponent &component) const;
+        virtual double quality(const ConnectedComponent &component) const;
 };
 
-class HystogramQualifier {
+class HystogramQualifier: public QualifierInterface {
     private:
         vector<double> hystogram;
         AbstractFeatureGetter *feature_getter;
     public:
         HystogramQualifier(AbstractFeatureGetter *feature_getter, const ConnectedComponentForest &forest); 
-        double quality(const ConnectedComponent &component) const;
+        virtual double quality(const ConnectedComponent &component) const;
 };
 
 double feature_height(const ConnectedComponent &component);

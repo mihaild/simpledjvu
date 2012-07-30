@@ -191,13 +191,14 @@ double ConnectedComponentForest::component_quality(const ConnectedComponent &com
 }
 
 vector<ConnectedComponent *> ConnectedComponentForest::get_best_subset() {
-    vector<HystogramQualifier> qualifiers;
+    //vector<HystogramQualifier> qualifiers;
+    vector<QualifierInterface *> qualifiers;
     ExternalFeautureGetter height_feature_getter(*this, feature_height);
     ExternalFeautureGetter width_feature_getter(*this, feature_width);
-    /*HystogramQualifier area_qualifier(&height_feature_getter, *this);*/
-    qualifiers.push_back(HystogramQualifier(&height_feature_getter, *this));
-    qualifiers.push_back(HystogramQualifier(&width_feature_getter, *this));
-    GradientFeatureGetter gradient_feature_getter(*this);
+    qualifiers.push_back(new HystogramQualifier(&height_feature_getter, *this));
+    qualifiers.push_back(new HystogramQualifier(&width_feature_getter, *this));
+    qualifiers.push_back(new GradientFeatureGetter(*this));
+    //GradientFeatureGetter gradient_feature_getter(*this);
     //std::cout << gradient_feature_getter.min() << ' ' << gradient_feature_getter.max() << '\n';
     std::cerr << "qualifier: OK\n";
 
@@ -207,9 +208,9 @@ vector<ConnectedComponent *> ConnectedComponentForest::get_best_subset() {
         for (int j = 0; j < components[i].size(); ++j) {
             qualities[i][j] = 0.0;
             for (const auto &qualifier : qualifiers) {
-                qualities[i][j] += qualifier.quality(*components[i][j]);
+                qualities[i][j] += qualifier->quality(*components[i][j]);
             }
-            qualities[i][j] *= (gradient_feature_getter.get_feature(*components[i][j]) / gradient_feature_getter.max() - 0.4);// - gradient_feature_getter.max() / 4;
+            //qualities[i][j] *= gradient_feature_getter.get_feature(*components[i][j]);// - gradient_feature_getter.max() / 4;
         }
     }
     std::cerr << "qualities: OK\n";

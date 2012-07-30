@@ -55,6 +55,10 @@ double ExternalFeautureGetter::get_feature(const ConnectedComponent &component) 
     return component.width() * component.height();
 }
 
+double ExternalFeautureGetter::quality(const ConnectedComponent &component) const {
+    return get_feature(component);
+}
+
 double feature_height(const ConnectedComponent &component) {
     return static_cast<double>(component.height());
 }
@@ -144,4 +148,8 @@ double GradientFeatureGetter::min() const {
 
 double GradientFeatureGetter::get_feature(const ConnectedComponent &component) const {
     return -static_cast<double>(gradient(component, image)) / border_length(component, image[0].size(), image.size());
+}
+
+double GradientFeatureGetter::quality(const ConnectedComponent &component) const {
+    return get_feature(component);
 }
