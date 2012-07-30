@@ -5,6 +5,8 @@
 #include <queue>
 #include <cmath>
 
+#include <ctime>
+
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -48,14 +50,17 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
     int height = image.size();
     int width = image[0].size();
 
-    for (int i = 0; i < height; ++i) {
+    for (int i = 1; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
-            for (int k = 0; k <= 1; ++k) {
-                for (int l = 0; l <= 1; ++l) {
-                    if (((i+k) >= 0) && ((i+k) < height) && ((j+l) >= 0) && ((j+l) < width) && image[i][j] && image[i+k][j+l]) {
-                        colors_forest.unite(colors[i][j], colors[i+k][j+l]);
-                    }
-                }
+            if (image[i][j] && image[i-1][j] && colors[i][j] != colors[i-1][j]) {
+                colors_forest.unite(colors[i][j], colors[i-1][j]);
+            }
+        }
+    }
+    for (int i = 0; i < height; ++i) {
+        for (int j = 1; j < width; ++j) {
+            if (image[i][j] && image[i][j-1] && colors[i][j] != colors[i][j-1]) {
+                colors_forest.unite(colors[i][j], colors[i][j-1]);
             }
         }
     }
@@ -107,10 +112,14 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
         }
     }
 
+    for (auto &i : prev_level) {
+        i->color = colors_forest.find(i->color);
+    }
+    sort(prev_level.begin(), prev_level.end(), cmp_components_pointers);
     for (auto &i : result) {
         i->form = bitonal_image(i->height(), vector<bool> (i->width(), false));
         for (int j = 0; j < prev_level.size(); ++j) {
-            if (colors_forest.find(i->color) == colors_forest.find(prev_level[j]->color)) {
+            if (i->color == prev_level[j]->color) {
                 i->childs.push_back(j);
             }
         }
