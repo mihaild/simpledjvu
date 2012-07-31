@@ -67,46 +67,42 @@ double feature_width(const ConnectedComponent &component) {
     return static_cast<double>(component.width());
 }
 
-int gradient(const ConnectedComponent &component, const GrayImage &image) {
+int border_sum(int func(int, int), const ConnectedComponent &component, const GrayImage &image) {
     int result(0);
-    const array<ipair, 4> directions = {ipair(-1,0), ipair(1,0), ipair(0,-1), ipair(0,1)};
-    for (int i = 0; i < component.height(); ++i) {
+    for (int i = 1; i < component.height(); ++i) {
         for (int j = 0; j < component.width(); ++j) {
-            if (component.form[i][j]) {
-                for (const auto& direction : directions) {
-                    try {
-                        int i0 = i + direction.first, j0 = j + direction.second;
-                        if (!component.form.at(i0).at(j0)) {
-                            result += image.at(i + component.top).at(j + component.left) - image.at(i0 + component.top).at(j0 + component.left);
-                        }
-                    }
-                    catch (std::out_of_range&) {
-                    }
+            if (component.form[i][j] != component.form[i-1][j]) {
+                if (component.form[i][j]) {
+                    result += func(image[i + component.top][j + component.left], image[i + component.top - 1][j + component.left]);
+                }
+                else {
+                    result += func(image[i + component.top - 1][j + component.left], image[i + component.top][j + component.left]);
+                }
+            }
+        }
+    }
+    for (int i = 0; i < component.height(); ++i) {
+        for (int j = 1; j < component.width(); ++j) {
+            if (component.form[i][j] != component.form[i][j-1]) {
+                if (component.form[i][j]) {
+                    result += func(image[i + component.top][j + component.left], image[i + component.top][j + component.left - 1]);
+                }
+                else {
+                    result += func(image[i + component.top][j + component.left - 1], image[i + component.top][j + component.left]);
                 }
             }
         }
     }
     return result;
 }
-int border_length(const ConnectedComponent &component, int width, int height) {
-    int result(0);
-    const array<ipair, 4> directions = {ipair(-1,0), ipair(1,0), ipair(0,-1), ipair(0,1)};
-    for (int i = 0; i < component.height(); ++i) {
-        for (int j = 0; j < component.width(); ++j) {
-            if (component.form[i][j]) {
-                for (const auto& direction : directions) {
-                    try {
-                        int i0 = i + direction.first, j0 = j + direction.second;
-                        if (!component.form.at(i0).at(j0)) {
-                            ++result;
-                        }
-                    }
-                    catch (std::out_of_range&) {
-                    }
-                }
-            }
-        }
-    }
+
+int gradient(const ConnectedComponent &component, const GrayImage &image) {
+    return border_sum([](int in, int out) { return in-out; }, component, image);
+}
+
+int border_length(const ConnectedComponent &component, const GrayImage &image) {
+    int result = border_sum([](int in, int out) { return 1; }, component, image);
+    int height = image.size(), width = image[0].size();
     if (component.left == 0) {
         for (int j = 0; j < component.height(); ++j) {
             result += component.form[j][0];
@@ -147,7 +143,7 @@ double GradientFeatureGetter::min() const {
 }
 
 double GradientFeatureGetter::get_feature(const ConnectedComponent &component) const {
-    return -static_cast<double>(gradient(component, image)) / border_length(component, image[0].size(), image.size());
+    return -static_cast<double>(gradient(component, image)) / border_length(component, image);
 }
 
 double GradientFeatureGetter::quality(const ConnectedComponent &component) const {

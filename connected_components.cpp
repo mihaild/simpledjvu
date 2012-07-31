@@ -36,17 +36,14 @@ int ConnectedComponent::height() const {
     return bottom - top + 1;
 }
 
-bitonal_image threshold(byte *pixels, int width, int height, byte level) {
-    bitonal_image result(height, vector<bool> (width));
-    for (int i = 0; i < width; ++i) {
-        for (int j = 0; j < height; ++j) {
-            result[j][i] = pixels[j*width + i] <= level;
-        }
-    }
-    return result;
+bool cmp_components_pointers(const ConnectedComponent *a, const ConnectedComponent *b) {
+    return a->color < b->color;
 }
 
+clock_t coloring = 0;
+
 vector<ConnectedComponent *> find_connected_components(const bitonal_image &image, vector<vector<int> > &colors, DisjointSetForest &colors_forest, vector<ConnectedComponent *> &prev_level) {
+    clock_t tmp = clock();
     int height = image.size();
     int width = image[0].size();
 
@@ -133,6 +130,7 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
             }
         }
     }
+    coloring += clock() - tmp;
 
     return result;
 }
@@ -147,9 +145,21 @@ ConnectedComponentForest build_connected_components_forest(byte *pixels, int wid
         }
     }
     DisjointSetForest colors_forest(active_color);
+    clock_t tmp = clock();
+    array<vector<ipair>, LEVELS> pixels_by_level;
+    GrayImage gray_image(height, vector<byte> (width));
+    for (int i = 0; i < height; ++i) {
+        for (int j = 0; j < width; ++j) {
+            gray_image[i][j] = pixels[i*width + j];
+            pixels_by_level[gray_image[i][j] / LEVEL_STEP].push_back(ipair(i, j));
+        }
+    }
+    bitonal_image image(height, vector<bool> (width, false));
     for (int i = 0, level = MIN_LEVEL; level <= MAX_LEVEL; ++i, level += LEVEL_STEP) {
         std::cerr << "Level: " << level << "; ";
-        bitonal_image image = threshold(pixels, width, height, level);
+        for (const auto &j : pixels_by_level[i]) {
+            image[j.first][j.second] = true;
+        }
         vector<ConnectedComponent *> components;
         if (result.empty()) {
             vector<ConnectedComponent *> tmp;
@@ -163,13 +173,9 @@ ConnectedComponentForest build_connected_components_forest(byte *pixels, int wid
         }
         std::cerr << "components: " << (components.size()) << '\n';
     }
-    GrayImage image(height, vector<byte> (width));
-    for (int i = 0; i < width; ++i) {
-        for (int j = 0; j < height; ++j) {
-            image[j][i] = pixels[j*width + i];
-        }
-    }
-    return ConnectedComponentForest(result, image);
+    std::cout << "coloring: " << static_cast<double>(clock() - tmp) / CLOCKS_PER_SEC << '\n';
+    std::cout << "coloring inside: " << static_cast<double>(coloring) / CLOCKS_PER_SEC << '\n';
+    return ConnectedComponentForest(result, gray_image);
 }
 
 void ConnectedComponentForest::save_component(std::string path, int level, int number) const {
@@ -201,6 +207,7 @@ double ConnectedComponentForest::component_quality(const ConnectedComponent &com
 
 vector<ConnectedComponent *> ConnectedComponentForest::get_best_subset() {
     //vector<HystogramQualifier> qualifiers;
+    clock_t tmp(clock());
     vector<QualifierInterface *> qualifiers;
     ExternalFeautureGetter height_feature_getter(*this, feature_height);
     ExternalFeautureGetter width_feature_getter(*this, feature_width);
@@ -209,7 +216,9 @@ vector<ConnectedComponent *> ConnectedComponentForest::get_best_subset() {
     qualifiers.push_back(new GradientFeatureGetter(*this));
     //GradientFeatureGetter gradient_feature_getter(*this);
     //std::cout << gradient_feature_getter.min() << ' ' << gradient_feature_getter.max() << '\n';
+    std::cout << static_cast<double>(clock() - tmp) / CLOCKS_PER_SEC << '\n';
     std::cerr << "qualifier: OK\n";
+    tmp = clock();
 
     vector<vector<double > > qualities(components.size());
     for (int i = 0; i < components.size(); ++i) {
@@ -222,6 +231,7 @@ vector<ConnectedComponent *> ConnectedComponentForest::get_best_subset() {
             //qualities[i][j] *= gradient_feature_getter.get_feature(*components[i][j]);// - gradient_feature_getter.max() / 4;
         }
     }
+    std::cout << "qualities time: " << static_cast<double>(clock() - tmp) / CLOCKS_PER_SEC << '\n';
     std::cerr << "qualities: OK\n";
 
     vector<vector<double> > best_by_subtree(components.size());
