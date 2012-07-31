@@ -5,8 +5,6 @@
 #include <queue>
 #include <cmath>
 
-#include <ctime>
-
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -40,24 +38,31 @@ bool cmp_components_pointers(const ConnectedComponent *a, const ConnectedCompone
     return a->color < b->color;
 }
 
-clock_t coloring = 0;
-
 vector<ConnectedComponent *> find_connected_components(const bitonal_image &image, vector<vector<int> > &colors, DisjointSetForest &colors_forest, vector<ConnectedComponent *> &prev_level) {
-    clock_t tmp = clock();
     int height = image.size();
     int width = image[0].size();
 
     for (int i = 1; i < height; ++i) {
-        for (int j = 0; j < width; ++j) {
-            if (image[i][j] && image[i-1][j] && colors[i][j] != colors[i-1][j]) {
-                colors_forest.unite(colors[i][j], colors[i-1][j]);
-            }
+        if (image[i][0] && image[i-1][0] && colors[i][0] != colors[i-1][0]) {
+            colors_forest.unite(colors[i][0], colors[i-1][0]);
         }
     }
-    for (int i = 0; i < height; ++i) {
+    for (int j = 1; j < width; ++j) {
+        if (image[0][j] && image[0][j-1] && colors[0][j] != colors[0][j-1]) {
+            colors_forest.unite(colors[0][j], colors[0][j-1]);
+        }
+    }
+
+    for (int i = 1; i < height; ++i) {
         for (int j = 1; j < width; ++j) {
-            if (image[i][j] && image[i][j-1] && colors[i][j] != colors[i][j-1]) {
-                colors_forest.unite(colors[i][j], colors[i][j-1]);
+            if (image[i][j]) {
+                int color = colors[i][j];
+                if (image[i-1][j] && colors[i-1][j] != color) {
+                    colors_forest.unite(color, colors[i-1][j]);
+                }
+                if (image[i][j-1] && colors[i][j-1] != color) {
+                    colors_forest.unite(color, colors[i][j-1]);
+                }
             }
         }
     }
@@ -68,7 +73,6 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
         }
     }
 
-    //unordered_map<int, int> colors_canonical;
     vector<int> colors_canonical(colors_forest.size(), -1);
     int canonical_colors_count = 0;
     for (int i = 0; i < height; ++i) {
@@ -124,7 +128,6 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
         }
     }
 
-    tmp = clock();
     for (int i = 0; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
             if (image[i][j] && colors_canonical[colors[i][j]] != -1) {
@@ -133,7 +136,6 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
             }
         }
     }
-    coloring += clock() - tmp;
 
     return result;
 }
@@ -176,8 +178,6 @@ ConnectedComponentForest build_connected_components_forest(byte *pixels, int wid
         }
         std::cerr << "components: " << (components.size()) << '\n';
     }
-    std::cout << "coloring: " << static_cast<double>(clock() - tmp) / CLOCKS_PER_SEC << '\n';
-    std::cout << "coloring inside: " << static_cast<double>(coloring) / CLOCKS_PER_SEC << '\n';
     return ConnectedComponentForest(result, gray_image);
 }
 
@@ -219,7 +219,6 @@ vector<ConnectedComponent *> ConnectedComponentForest::get_best_subset() {
     qualifiers.push_back(new GradientFeatureGetter(*this));
     //GradientFeatureGetter gradient_feature_getter(*this);
     //std::cout << gradient_feature_getter.min() << ' ' << gradient_feature_getter.max() << '\n';
-    std::cout << static_cast<double>(clock() - tmp) / CLOCKS_PER_SEC << '\n';
     std::cerr << "qualifier: OK\n";
     tmp = clock();
 
@@ -234,7 +233,6 @@ vector<ConnectedComponent *> ConnectedComponentForest::get_best_subset() {
             //qualities[i][j] *= gradient_feature_getter.get_feature(*components[i][j]);// - gradient_feature_getter.max() / 4;
         }
     }
-    std::cout << "qualities time: " << static_cast<double>(clock() - tmp) / CLOCKS_PER_SEC << '\n';
     std::cerr << "qualities: OK\n";
 
     vector<vector<double> > best_by_subtree(components.size());
