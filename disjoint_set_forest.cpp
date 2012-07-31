@@ -33,3 +33,7 @@ void DisjointSetForest::unite(int x, int y) {
 inline int DisjointSetForest::operator[] (int x) {
     return find(x);
 }
+
+int DisjointSetForest::size() {
+    return parent.size();
+}

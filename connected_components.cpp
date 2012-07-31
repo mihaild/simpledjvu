@@ -68,18 +68,20 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
         }
     }
 
-    unordered_map<int, int> colors_canonical;
+    //unordered_map<int, int> colors_canonical;
+    vector<int> colors_canonical(colors_forest.size(), -1);
+    int canonical_colors_count = 0;
     for (int i = 0; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
             if (image[i][j]) {
-                if (!colors_canonical.count(colors[i][j])) {
-                    colors_canonical[colors[i][j]] = colors_canonical.size() - 1;
+                if (colors_canonical[colors[i][j]] == -1) {
+                    colors_canonical[colors[i][j]] = canonical_colors_count++;
                 }
             }
         }
     }
 
-    vector<ConnectedComponent *> tmp_result(colors_canonical.size());
+    vector<ConnectedComponent *> tmp_result(canonical_colors_count);
     for (auto &i: tmp_result) {
         i = new ConnectedComponent();
     }
@@ -100,7 +102,7 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
 
     for (int i = 0; i < tmp_result.size(); ++i) {
         if (tmp_result[i]->width() < MIN_WIDTH || tmp_result[i]->height() < MIN_HEIGHT) {
-            colors_canonical.erase(tmp_result[i]->color);
+            colors_canonical[tmp_result[i]->color] = -1;
             delete tmp_result[i];
         }
         else {
@@ -122,9 +124,10 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
         }
     }
 
+    tmp = clock();
     for (int i = 0; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
-            if (image[i][j] && colors_canonical.count(colors[i][j])) {
+            if (image[i][j] && colors_canonical[colors[i][j]] != -1) {
                 ConnectedComponent &component = *result[colors_canonical[colors[i][j]]];
                 component.form[i - component.top][j - component.left] = true;
             }
