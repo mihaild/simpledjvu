@@ -38,11 +38,11 @@ bool cmp_components_pointers(const ConnectedComponent *a, const ConnectedCompone
     return a->color < b->color;
 }
 
-vector<ConnectedComponent *> find_connected_components(const bitonal_image &image, vector<vector<int> > &colors, DisjointSetForest &colors_forest, vector<ConnectedComponent *> &prev_level) {
+vector<ConnectedComponent *> find_connected_components(const bitonal_image &image, vector<vector<int> > &colors, DisjointSetForest &colors_forest, vector<ConnectedComponent *> &prev_level, const vector<ipair> &new_points) {
     int height = image.size();
     int width = image[0].size();
 
-    for (int i = 1; i < height; ++i) {
+    /*for (int i = 1; i < height; ++i) {
         if (image[i][0] && image[i-1][0] && colors[i][0] != colors[i-1][0]) {
             colors_forest.unite(colors[i][0], colors[i-1][0]);
         }
@@ -64,6 +64,21 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
                     colors_forest.unite(color, colors[i][j-1]);
                 }
             }
+        }
+    }*/
+    for (const auto &i : new_points) {
+        int color = colors[i.first][i.second];
+        if (i.first != 0 && image[i.first - 1][i.second]) {
+            colors_forest.unite(color, colors[i.first - 1][i.second]);
+        }
+        if (i.first != height - 1 && image[i.first + 1][i.second]) {
+            colors_forest.unite(color, colors[i.first + 1][i.second]);
+        }
+        if (i.second != 0 && image[i.first][i.second - 1]) {
+            colors_forest.unite(color, colors[i.first][i.second - 1]);
+        }
+        if (i.second != 0 && image[i.first][i.second + 1]) {
+            colors_forest.unite(color, colors[i.first][i.second + 1]);
         }
     }
 
@@ -168,10 +183,10 @@ ConnectedComponentForest build_connected_components_forest(byte *pixels, int wid
         vector<ConnectedComponent *> components;
         if (result.empty()) {
             vector<ConnectedComponent *> tmp;
-            components = find_connected_components(image, colors, colors_forest, tmp);
+            components = find_connected_components(image, colors, colors_forest, tmp, pixels_by_level[i]);
         }
         else {
-            components = find_connected_components(image, colors, colors_forest, result.back());
+            components = find_connected_components(image, colors, colors_forest, result.back(), pixels_by_level[i]);
         }
         if (!components.empty()) {
             result.push_back(components);
