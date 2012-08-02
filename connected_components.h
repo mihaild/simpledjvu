@@ -27,6 +27,7 @@ struct ConnectedComponent {
     void save(FILE *file) const;
     int width() const;
     int height() const;
+    Point mass_center() const;
 };
 
 struct ConnectedComponentForest {

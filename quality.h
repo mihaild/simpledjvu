@@ -71,3 +71,22 @@ class HystogramQualifier: public QualifierInterface {
 
 double feature_height(const ConnectedComponent &component);
 double feature_width(const ConnectedComponent &component);
+
+class AvgDistanceFeatureGetter: public QualifierInterface {
+    private:
+        const ConnectedComponentForest &forest;
+        double distance(const ConnectedComponent &a, const ConnectedComponent &b) const;
+    public:
+        AvgDistanceFeatureGetter(const ConnectedComponentForest &forest);
+        virtual double quality(const ConnectedComponent &component) const;
+};
+
+class VarianceFeatureGetter: public QualifierInterface {
+    private:
+        const GrayImage &image;
+        double dispersion(const ConnectedComponent &component) const;
+        double _min, _max;
+    public:
+        VarianceFeatureGetter(const ConnectedComponentForest &forest);
+        virtual double quality(const ConnectedComponent &component) const;
+};
