@@ -58,30 +58,6 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
     int height = image.size();
     int width = image[0].size();
 
-    /*for (int i = 1; i < height; ++i) {
-        if (image[i][0] && image[i-1][0] && colors[i][0] != colors[i-1][0]) {
-            colors_forest.unite(colors[i][0], colors[i-1][0]);
-        }
-    }
-    for (int j = 1; j < width; ++j) {
-        if (image[0][j] && image[0][j-1] && colors[0][j] != colors[0][j-1]) {
-            colors_forest.unite(colors[0][j], colors[0][j-1]);
-        }
-    }
-
-    for (int i = 1; i < height; ++i) {
-        for (int j = 1; j < width; ++j) {
-            if (image[i][j]) {
-                int color = colors[i][j];
-                if (image[i-1][j] && colors[i-1][j] != color) {
-                    colors_forest.unite(color, colors[i-1][j]);
-                }
-                if (image[i][j-1] && colors[i][j-1] != color) {
-                    colors_forest.unite(color, colors[i][j-1]);
-                }
-            }
-        }
-    }*/
     for (const auto &i : new_points) {
         int color = colors[i.first][i.second];
         if (i.first != 0 && image[i.first - 1][i.second]) {
@@ -217,7 +193,7 @@ void ConnectedComponentForest::save_component(std::string path, int level, int n
     char s[255];
     ConnectedComponent *component = components[level][number];
     mkdir(path.c_str(), 0777);
-    sprintf(s, "%d", component->color);
+    sprintf(s, "%d", number);
     path += s;// + '/';
     //path += '/';
     mkdir(path.c_str(), 0777);
