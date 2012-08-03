@@ -122,16 +122,13 @@ vector<ConnectedComponent *> find_connected_components(const bitonal_image &imag
         }
     }
 
-    for (auto &i : prev_level) {
-        i->color = colors_forest.find(i->color);
-    }
-    sort(prev_level.begin(), prev_level.end(), cmp_components_pointers);
     for (auto &i : result) {
         i->form = bitonal_image(i->height(), vector<bool> (i->width(), false));
-        for (int j = 0; j < prev_level.size(); ++j) {
-            if (i->color == prev_level[j]->color) {
-                i->childs.push_back(j);
-            }
+    }
+    for (int i = 0; i < prev_level.size(); ++i) {
+        int color = colors_forest.find(prev_level[i]->color);
+        if (colors_canonical[color] != -1) {
+            result[colors_canonical[color]]->childs.push_back(i);
         }
     }
 
