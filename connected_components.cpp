@@ -213,55 +213,22 @@ double ConnectedComponentForest::component_quality(const ConnectedComponent &com
 }
 
 vector<ConnectedComponent *> ConnectedComponentForest::get_best_subset() {
-    //vector<HystogramQualifier> qualifiers;
-    clock_t tmp(clock());
-    vector<QualifierInterface *> qualifiers;
-    ExternalFeautureGetter height_feature_getter(*this, feature_height);
-    ExternalFeautureGetter width_feature_getter(*this, feature_width);
-    //qualifiers.push_back(new HystogramQualifier(&height_feature_getter, *this));
-    //qualifiers.push_back(new HystogramQualifier(&width_feature_getter, *this));
-    qualifiers.push_back(new GradientFeatureGetter(*this));
-    //qualifiers.push_back(new AvgDistanceFeatureGetter(*this));
-    //qualifiers.push_back(new VarianceFeatureGetter(*this));
-    //GradientFeatureGetter gradient_feature_getter(*this);
-    std::cerr << "qualifier: OK\n";
-    tmp = clock();
-
-    vector<vector<double > > qualities(components.size());
-    double mmax(-1), mmin(9e99), avg(0);
-    int count(0);
+    vector<vector<int> > bifurcation_distance(components.size());
+    vector<vector<int> > best_by_subtree(components.size());
     for (int i = 0; i < components.size(); ++i) {
-        std::cerr << "level " << i << " from " << components.size() << '\n';
-        qualities[i].resize(components[i].size());
+        bifurcation_distance[i].resize(components[i].size(), 0);
+        best_by_subtree[i].resize(components[i].size(), 0);
         for (int j = 0; j < components[i].size(); ++j) {
-            //if (!(j % 100)) {
-                //std::cerr << "component " << j << " from " << components[i].size() << '\n';
-            //}
-            qualities[i][j] = 0.0;
-            for (const auto &qualifier : qualifiers) {
-                qualities[i][j] += qualifier->quality(*components[i][j]) - 0.2;
+            ipair current(i, j);
+            while (components[current.first][current.second]->childs.size() == 1) {
+                current.second = components[current.first][current.second]->childs[0];
+                --current.first;
+                ++bifurcation_distance[i][j];
             }
-            //qualities[i][j] = pow(qualities[i][j], 5);
-            //qualities[i][j] *= qualities[i][j];
-            ++count;
-            mmax = max(mmax, qualities[i][j]);
-            mmin = min(mmin, qualities[i][j]);
-            avg += qualities[i][j];
-            //qualities[i][j] *= gradient_feature_getter.get_feature(*components[i][j]);// - gradient_feature_getter.max() / 4;
-        }
-    }
-    //std::cerr << mmin << ' ' << mmax << ' '  << (avg / count) << '\n';
-    std::cerr << "qualities: OK\n";
-
-    vector<vector<double> > best_by_subtree(components.size());
-    for (int i = 0; i < best_by_subtree.size(); ++i) {
-        best_by_subtree[i].resize(components[i].size());
-        for (int j = 0; j < best_by_subtree[i].size(); ++j) {
-            double cur_best_by_subtree(0);
-            for (int k : components[i][j]->childs) {
-                cur_best_by_subtree += sqr(max(best_by_subtree[i - 1][k], qualities[i - 1][k]));
+            best_by_subtree[i][j] = bifurcation_distance[i][j];
+            for (int k : components[current.first][current.second]->childs) {
+                best_by_subtree[i][j] = max(best_by_subtree[i][j], best_by_subtree[current.first - 1][k]);
             }
-            best_by_subtree[i][j] = sqrt(cur_best_by_subtree);// / sqrt(components[i][j]->childs.size() / 10);
         }
     }
     queue<ipair> take;
@@ -272,13 +239,14 @@ vector<ConnectedComponent *> ConnectedComponentForest::get_best_subset() {
     while (!take.empty()) {
         ipair target = take.front();
         take.pop();
-        if (best_by_subtree[target.first][target.second] > qualities[target.first][target.second]) {
-            for (int i : components[target.first][target.second]->childs) {
-                take.emplace(target.first - 1, i);
-            }
+        ConnectedComponent *component = components[target.first][target.second];
+        if (bifurcation_distance[target.first][target.second] && bifurcation_distance[target.first][target.second] >= best_by_subtree[target.first - 1][component->childs[0]] / 1.5) {
+            result.push_back(component);
         }
         else {
-            result.push_back(components[target.first][target.second]);
+            for (int i : component->childs) {
+                take.emplace(target.first - 1, i);
+            }
         }
     }
     std::cerr << "best components: OK\n";
