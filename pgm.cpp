@@ -1,3 +1,4 @@
+#include "types.h"
 #include "pgm.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -96,6 +97,13 @@ void save_pgm(FILE *f, byte *pixels, int width, int height) {
     fwrite(pixels, 1, width*height, f);
 }
 
+void save_pgm(FILE *f, const GrayImage &image) {
+    int height = image.size(), width = image[0].size();
+    byte *pixels = vector_to_c_array(image);
+    save_pgm(f, pixels, width, height);
+    delete pixels;
+}
+
 void pack_row(byte *bits, byte *bytes, int n)/*{{{*/
 {
     int coef = 0x80;
@@ -162,4 +170,15 @@ GrayImage c_array_to_vector(byte *pixels, int width, int height) {
         }
     }
     return result;
+}
+
+byte *vector_to_c_array(const vector<vector<byte> > &image) {
+    int height = image.size(), width = image[0].size();
+    byte *pixels = new byte[width*height];
+    for (int i = 0; i < height; ++i) {
+        for (int j = 0; j < width; ++j) {
+             pixels[i*width + j] = image[i][j];
+        }
+    }
+    return pixels;
 }
