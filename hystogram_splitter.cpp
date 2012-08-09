@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cstdlib>
 #include <cmath>
 
@@ -6,11 +7,11 @@
 
 const int CELL_SIZE = 20;
 
-const int ROUNDS = 50;
+const int ROUNDS = 1000;
 
 const double QUANTILE = 0.05;
 
-const int EPS_STEP = 5;
+const byte EPS_STEP = 1;
 
 double dispersion(const Hystogram &hystogram) {
     double sum(0.0), sum_sqr(0.0);
@@ -26,34 +27,39 @@ double dispersion(const Hystogram &hystogram) {
     return sqrt(sum_sqr/elements - sum*sum/(elements*elements)) / (COLORS_COUNT / 2);
 }
 
-double get_val(double q, double dispersion, double avg) {
-    return (1 - dispersion) * avg + dispersion * q;
-}
-
-GrayImage make_step(const GrayImage &q, const vector<vector<double> > &dispersions, const GrayImage &image) {
+GrayImage make_step(const GrayImage &q, const vector<vector<double> > &dispersions, const GrayImage &image, bool up) {
     GrayImage result(image);
     int width = image[0].size(), height = image.size();
+    int direction = up ? 1 : -1;
 
     for (int i = 0; i < result.size(); ++i) {
         for (int j = 0; j < result[i].size(); ++j) {
-            int n(0), s(0);
-            if (i > 0) {
-                ++n;
-                s += image[i-1][j];
+            if (direction*(q[i][j] - image[i][j]) > 0) {
+                int n(0), s(0);
+                if (i > 0) {
+                    ++n;
+                    s += image[i-1][j];
+                }
+                if (i < result.size() - 1) {
+                    ++n;
+                    s += image[i+1][j];
+                }
+                if (j > 0) {
+                    ++n;
+                    s += image[i][j-1];
+                }
+                if (j < result[i].size() - 1) {
+                    ++n;
+                    s += image[i][j+1];
+                }
+                double avg = s / n;
+                if (up) {
+                    result[i][j] = (avg + EPS_STEP > q[i][j]) ? q[i][j] : (avg + EPS_STEP);
+                }
+                else {
+                    result[i][j] = (avg - EPS_STEP < q[i][j]) ? q[i][j] : (avg - EPS_STEP);
+                }
             }
-            if (i < result.size() - 1) {
-                ++n;
-                s += image[i+1][j];
-            }
-            if (j > 0) {
-                ++n;
-                s += image[i][j-1];
-            }
-            if (j < result[i].size() - 1) {
-                ++n;
-                s += image[i][j+1];
-            }
-            result[i][j] = get_val(q[i][j], dispersions[i][j], static_cast<double> (s) / n);
         }
     }
     return result;
@@ -89,11 +95,12 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    GrayImage black(black_q), white(white_q);
+    GrayImage black(height / CELL_SIZE, vector<byte> (width / CELL_SIZE, 0));
+    GrayImage white(height / CELL_SIZE, vector<byte> (width / CELL_SIZE, 255));
 
     for (int round = 0; round < ROUNDS; ++round) {
-        black = make_step(black_q, dispersions, black);
-        white = make_step(white_q, dispersions, white);
+        black = make_step(black_q, dispersions, black, true);
+        white = make_step(white_q, dispersions, white, false);
     }
 
     save_pgm(fopen(argv[2], "w"), black);
