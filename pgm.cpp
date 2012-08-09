@@ -153,3 +153,13 @@ void save_pbm(FILE *f, const bitonal_image &image) {
     save_pbm(f, colors, width, height, width, height);
     delete colors;
 }
+
+GrayImage c_array_to_vector(byte *pixels, int width, int height) {
+    GrayImage result(height, vector<byte> (width));
+    for (int i = 0; i < height; ++i) {
+        for (int j = 0; j < width; ++j) {
+            result[i][j] = pixels[i*width + j];
+        }
+    }
+    return result;
+}

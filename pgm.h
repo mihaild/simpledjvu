@@ -22,3 +22,5 @@ void save_pgm(FILE *f, byte *pixels, int width, int height);
 
 void save_pbm(FILE *f, byte *colors, int32 width, int32 height, int32 row_size, int32 rows_count);
 void save_pbm(FILE *f, const bitonal_image &image);
+
+GrayImage c_array_to_vector(byte *pixels, int width, int height);
