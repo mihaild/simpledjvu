@@ -74,9 +74,12 @@ int main(int argc, char *argv[]) {
 
     GrayImage image = c_array_to_vector(pixels, width, height);
 
-    GrayImage black_q(height / CELL_SIZE, vector<byte> (width / CELL_SIZE));
+    int32 v_cells = height / CELL_SIZE + (height % CELL_SIZE ? 1 : 0);
+    int32 h_cells = width / CELL_SIZE + (width % CELL_SIZE ? 1 : 0);
+
+    GrayImage black_q(v_cells, vector<byte> (h_cells));
     GrayImage white_q(black_q);
-    vector<vector<double> > dispersions(height / CELL_SIZE, vector<double> (width / CELL_SIZE));
+    vector<vector<double> > dispersions(v_cells, vector<double> (h_cells));
 
     for (int i = 0; i < black_q.size(); ++i) {
         for (int j = 0; j < black_q[i].size(); ++j) {
@@ -95,15 +98,27 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    GrayImage black(height / CELL_SIZE, vector<byte> (width / CELL_SIZE, 0));
-    GrayImage white(height / CELL_SIZE, vector<byte> (width / CELL_SIZE, 255));
+    GrayImage black(v_cells, vector<byte> (h_cells, 0));
+    GrayImage white(v_cells, vector<byte> (h_cells, 255));
 
     for (int round = 0; round < ROUNDS; ++round) {
         black = make_step(black_q, dispersions, black, true);
         white = make_step(white_q, dispersions, white, false);
     }
 
-    save_pgm(fopen(argv[2], "w"), black);
+    GrayImage big(image);
+    for (int i = 0; i < height; ++i) {
+        for (int j = 0; j < width; ++j) {
+            big[i][j] = black[i / CELL_SIZE][j / CELL_SIZE];
+        }
+    }
+    save_pgm(fopen(argv[2], "w"), big);
+
+    for (int i = 0; i < height; ++i) {
+        for (int j = 0; j < width; ++j) {
+            big[i][j] = white[i / CELL_SIZE][j / CELL_SIZE];
+        }
+    }
     save_pgm(fopen(argv[3], "w"), white);
 
     if (argc > 4) {
