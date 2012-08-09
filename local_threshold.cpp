@@ -9,18 +9,6 @@
 #include "pgm.h"
 #include "hystograms.h"
 
-byte get_right_quantile(const Hystogram &hystogram, double level) {
-    int need = std::accumulate(hystogram.begin(), hystogram.end(), 0) * level;
-    int current_sum = 0;
-    for (byte i = hystogram.size() - 1; i >= 0; --i) {
-        current_sum += hystogram[i];
-        if (current_sum >= need) {
-            return i;
-        }
-    }
-    return 0;
-}
-
 int main(int argc, char *argv[]) {
     FILE *data;
 

@@ -83,3 +83,19 @@ GlobalLevelsDistribution get_global_levels_distribution(byte *pixels, int row_si
     GlobalLevelsDistribution result(rows_count, vector<LevelsDistribution> (row_size));
     //vector<vector<Hystogram> > hystograms = get_hystograms(pixels, row_size, rows_count, radius);
 }
+
+byte get_right_quantile(const Hystogram &hystogram, double level) {
+    int need = std::accumulate(hystogram.begin(), hystogram.end(), 0) * level;
+    int current_sum = 0;
+    for (byte i = hystogram.size() - 1; i >= 0; --i) {
+        current_sum += hystogram[i];
+        if (current_sum >= need) {
+            return i;
+        }
+    }
+    return 0;
+}
+
+byte get_left_quantile(const Hystogram &hystogram, double level) {
+    return get_right_quantile(hystogram, 1.0 - level);
+}
