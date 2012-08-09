@@ -68,15 +68,21 @@ int main(int argc, char *argv[]) {
 
     GrayImage image = c_array_to_vector(pixels, width, height);
 
-    vector<vector<Hystogram> > integral_hystograms = get_rectangle_hystograms(pixels, row_size, rows_count);
-
     GrayImage black_q(height / CELL_SIZE, vector<byte> (width / CELL_SIZE));
     GrayImage white_q(black_q);
     vector<vector<double> > dispersions(height / CELL_SIZE, vector<double> (width / CELL_SIZE));
 
     for (int i = 0; i < black_q.size(); ++i) {
         for (int j = 0; j < black_q[i].size(); ++j) {
-            Hystogram hystogram = get_local_hystogram(integral_hystograms, CELL_SIZE, i*CELL_SIZE + CELL_SIZE / 2, j*CELL_SIZE + CELL_SIZE / 2);
+            Hystogram hystogram;
+            for (auto &k : hystogram) {
+                k = 0;
+            }
+            for (int k = 0; k < CELL_SIZE && i*CELL_SIZE + k < height; ++k) {
+                for (int l = 0; l < CELL_SIZE && j*CELL_SIZE + l < width; ++l) {
+                    ++hystogram[image[i*CELL_SIZE + k][j*CELL_SIZE + l]];
+                }
+            }
             black_q[i][j] = get_left_quantile(hystogram, QUANTILE);
             white_q[i][j] = get_right_quantile(hystogram, QUANTILE);
             dispersions[i][j] = dispersion(hystogram);
@@ -92,6 +98,11 @@ int main(int argc, char *argv[]) {
 
     save_pgm(fopen(argv[2], "w"), black);
     save_pgm(fopen(argv[3], "w"), white);
+
+    if (argc > 4) {
+        save_pgm(fopen(argv[4], "w"), black_q);
+        save_pgm(fopen(argv[5], "w"), white_q);
+    }
 
     return 0;
 }
