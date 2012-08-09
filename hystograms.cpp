@@ -58,19 +58,19 @@ vector<vector<Hystogram> > get_rectangle_hystograms(byte *pixels, int row_size, 
 }
 
 // fails if radius > min(row_size, rows_count)
-Hystogram get_local_hystogram(const vector<vector<Hystogram> > &rectangles_hystogram, int radius, int x, int y) {
-    int left = ((x - radius/2) > 0) ? (x - radius/2) : 0;
-    if ((left + radius) >= rectangles_hystogram.size()) {
-        left = rectangles_hystogram.size() - radius - 1;
+Hystogram get_local_hystogram(const vector<vector<Hystogram> > &rectangles_hystogram, int side, int x, int y) {
+    int left = ((x - side/2) > 0) ? (x - side/2) : 0;
+    if ((left + side) >= rectangles_hystogram.size()) {
+        left = rectangles_hystogram.size() - side - 1;
     }
-    int top = ((y - radius/2) > 0) ? (y - radius/2) : 0;
-    if ((top + radius) >= rectangles_hystogram[left].size()) {
-        top = rectangles_hystogram[left].size() - radius - 1;
+    int top = ((y - side/2) > 0) ? (y - side/2) : 0;
+    if ((top + side) >= rectangles_hystogram[left].size()) {
+        top = rectangles_hystogram[left].size() - side - 1;
     }
-    auto result = rectangles_hystogram[left][top] + rectangles_hystogram[left + radius][top + radius] - rectangles_hystogram[left][top + radius] - rectangles_hystogram[left + radius][top];
+    auto result = rectangles_hystogram[left][top] + rectangles_hystogram[left + side][top + side] - rectangles_hystogram[left][top + side] - rectangles_hystogram[left + side][top];
     for (int i = 0; i < result.size(); ++i) {
         assert(result[i] >= 0);
-        assert(result[i] <= radius*radius);
+        assert(result[i] <= side*side);
     }
     return result;
 }

@@ -25,6 +25,9 @@ local_threshold: build/local_threshold.o build/hystograms.o build/pgm.o
 classifier_bitonize: build/classifier_bitonize.o build/pgm.o build/disjoint_set_forest.o build/connected_components.o build/quality.o
 	$(CC) -o classifier_bitonize build/classifier_bitonize.o build/pgm.o build/disjoint_set_forest.o build/connected_components.o build/quality.o
 
+hystogram_splitter: build/hystogram_splitter.o build/pgm.o build/hystograms.o
+	$(CC) -o hystogram_splitter build/hystogram_splitter.o build/pgm.o build/hystograms.o
+
 build/bitonize.o: bitonize.cpp types.h constants.h
 	$(CC) -c -o build/bitonize.o bitonize.cpp
 
@@ -60,6 +63,9 @@ build/quality.o: quality.cpp quality.h
 
 build/connected_components.o: connected_components.cpp connected_components.h quality.h
 	$(CC) -c -o build/connected_components.o connected_components.cpp
+
+build/hystogram_splitter.o: hystogram_splitter.cpp pgm.h hystograms.h
+	$(CC) -c -o build/hystogram_splitter.o hystogram_splitter.cpp
 
 clean:
 	rm -f build/* $(BIN_FILES)
