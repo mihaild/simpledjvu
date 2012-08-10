@@ -11,7 +11,7 @@ const int ROUNDS = 1000;
 
 const double QUANTILE = 0.05;
 
-const byte EPS_STEP = 1;
+const double EPS_STEP = 0.5;
 
 double dispersion(const Hystogram &hystogram) {
     double sum(0.0), sum_sqr(0.0);
@@ -27,15 +27,15 @@ double dispersion(const Hystogram &hystogram) {
     return sqrt(sum_sqr/elements - sum*sum/(elements*elements)) / (COLORS_COUNT / 2);
 }
 
-GrayImage make_step(const GrayImage &q, const vector<vector<double> > &dispersions, const GrayImage &image, bool up) {
-    GrayImage result(image);
+vector<vector<double> > make_step(const GrayImage &q, const vector<vector<double> > &dispersions, const vector<vector<double> > &image, bool up) {
+    vector<vector<double> > result(image);
     int width = image[0].size(), height = image.size();
     int direction = up ? 1 : -1;
 
     for (int i = 0; i < result.size(); ++i) {
         for (int j = 0; j < result[i].size(); ++j) {
             if (direction*(q[i][j] - image[i][j]) > 0) {
-                int n(0), s(0);
+                double n(0), s(0);
                 if (i > 0) {
                     ++n;
                     s += image[i-1][j];
@@ -65,7 +65,7 @@ GrayImage make_step(const GrayImage &q, const vector<vector<double> > &dispersio
     return result;
 }
 
-GrayImage increase_image(const GrayImage &small, int width, int height) {
+GrayImage increase_image(const vector<vector<double> > &small, int width, int height) {
     GrayImage result(height, vector<byte> (width));
     //int vscale(height / small.size() + (height % small.size() == 0 ? 0 : 1)), hscale(width / small[0].size() + (width % small[0].size() == 0 ? 0 : 1));
     int vscale(CELL_SIZE), hscale(CELL_SIZE);
@@ -73,29 +73,29 @@ GrayImage increase_image(const GrayImage &small, int width, int height) {
     //corners
     for (int i = 0; i < vscale / 2; ++i) {
         for (int j = 0; j < hscale / 2; ++j) {
-            result[i][j] = small[0][0];
-            result[height - i - 1][j] = small.back()[0];
-            result[i][width - j - 1] = small[0].back();
-            result[height - i - 1][width - j - 1] = small.back().back();
+            result[i][j] = static_cast<int>(small[0][0]);
+            result[height - i - 1][j] = static_cast<int>(small.back()[0]);
+            result[i][width - j - 1] = static_cast<int>(small[0].back());
+            result[height - i - 1][width - j - 1] = static_cast<int>(small.back().back());
         }
     }
 
     //left and right borders
     for (int i = 0; i < height - vscale; ++i) {
         {
-            int top_val = small[i / vscale][0];
-            int bottom_val = small[i / vscale + 1][0];
+            double top_val = small[i / vscale][0];
+            double bottom_val = small[i / vscale + 1][0];
             int pos = i % vscale;
             for (int j = 0; j < hscale / 2; ++j) {
-                result[i + vscale / 2][j] = (bottom_val * pos + top_val * (vscale - pos)) / vscale;
+                result[i + vscale / 2][j] = static_cast<int>((bottom_val * pos + top_val * (vscale - pos)) / vscale);
             }
         }
         {
-            int top_val = small[i / vscale].back();
-            int bottom_val = small[i / vscale + 1].back();
+            double top_val = small[i / vscale].back();
+            double bottom_val = small[i / vscale + 1].back();
             int pos = i % vscale;
             for (int j = width - hscale / 2; j < width; ++j) {
-                result[i + vscale / 2][j] = (bottom_val * pos + top_val * (vscale - pos)) / vscale;
+                result[i + vscale / 2][j] = static_cast<int>((bottom_val * pos + top_val * (vscale - pos)) / vscale);
             }
         }
     }
@@ -103,21 +103,21 @@ GrayImage increase_image(const GrayImage &small, int width, int height) {
     //top and bottom borders
     for (int j = 0; j < width - hscale; ++j) {
         {
-            int left_val = small[0][j / hscale];
-            int right_val = small[0][j / hscale + 1];
-            std::swap(left_val, right_val); //WTF?!?!?! why it works?
+            double left_val = small[0][j / hscale];
+            double right_val = small[0][j / hscale + 1];
+            std::swap(left_val, right_val); //WTF?!?!?! why does it work?
             int pos = j % hscale;
             for (int i = 0; i < vscale / 2; ++i) {
-                result[i][j + hscale / 2] = (left_val * pos + right_val * (hscale - pos)) / hscale;
+                result[i][j + hscale / 2] = static_cast<int>((left_val * pos + right_val * (hscale - pos)) / hscale);
             }
         }
         {
-            int left_val = small.back()[j / hscale];
-            int right_val = small.back()[j / hscale + 1];
+            double left_val = small.back()[j / hscale];
+            double right_val = small.back()[j / hscale + 1];
             std::swap(left_val, right_val);
             int pos = j % hscale;
             for (int i = height - vscale / 2; i < height; ++i) {
-                result[i][j + hscale / 2] = (left_val * pos + right_val * (hscale - pos)) / hscale;
+                result[i][j + hscale / 2] = static_cast<int>((left_val * pos + right_val * (hscale - pos)) / hscale);
             }
         }
     }
@@ -135,8 +135,8 @@ GrayImage increase_image(const GrayImage &small, int width, int height) {
              *
              * (1, 1) = (hscale - 1, vscale - 1)
              */
-            int A, B, C;
-            int a, b, c;
+            double A, B, C;
+            double a, b, c;
             b = small[i / vscale][j / hscale + 1];
             c = small[i / vscale + 1][j / hscale];
             if (vpos*(hscale - 1) + hpos*(vscale - 1) < (hscale - 1)*(vscale - 1)) {//top left triangle
@@ -151,7 +151,7 @@ GrayImage increase_image(const GrayImage &small, int width, int height) {
                 A = a - c;
                 B = a - b;
             }
-            result[i + vscale / 2][j + hscale / 2] = (A*hpos*(vscale-1) + B*vpos*(hscale-1) + C*(vscale-1)*(hscale-1)) / ((vscale-1)*(hscale-1));
+            result[i + vscale / 2][j + hscale / 2] = static_cast<int>((A*hpos*(vscale-1) + B*vpos*(hscale-1) + C*(vscale-1)*(hscale-1)) / ((vscale-1)*(hscale-1)));
         }
     }
     return result;
@@ -190,8 +190,13 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    GrayImage black(v_cells, vector<byte> (h_cells, 0));
-    GrayImage white(v_cells, vector<byte> (h_cells, 255));
+    vector<vector<double> > black(v_cells, vector<double> (h_cells, 0));
+    vector<vector<double> > white(v_cells, vector<double> (h_cells, 255));
+    /*for (int i = 0; i < v_cells; ++i) {
+        for (int j = 0; j < h_cells; ++j) {
+            black[i][j] = static_cast<double>(black_q[i][j]);
+        }
+    }*/
 
     for (int round = 0; round < ROUNDS; ++round) {
         black = make_step(black_q, dispersions, black, true);
@@ -199,6 +204,14 @@ int main(int argc, char *argv[]) {
     }
 
     save_pgm(fopen(argv[2], "w"), increase_image(black, width, height));
+    /*vector<vector<byte> > bb(v_cells, vector<byte> (h_cells));
+    for (int i = 0; i < v_cells; ++i) {
+        for (int j = 0; j < h_cells; ++j) {
+            bb[i][j] = static_cast<int>(black[i][j]);
+        }
+        std::cout << '\n';
+    }
+    save_pgm(fopen(argv[2], "w"), bb);*/
 
     save_pgm(fopen(argv[3], "w"), increase_image(white, width, height));
 
