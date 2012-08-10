@@ -1,14 +1,14 @@
 CC = g++ -O3 -std=c++0x
 
-BIN_FILES = bitonize remove_background decrease_colors_count bitonize_threshold build_hystograms local_threshold classifier_bitonize
+BIN_FILES = bitonize normalize decrease_colors_count bitonize_threshold build_hystograms local_threshold classifier_bitonize
 
 all: $(BIN_FILES)
 
 bitonize: build/bitonize.o build/pgm.o
 	$(CC) -o bitonize build/bitonize.o build/pgm.o
 
-remove_background: build/remove_background.o build/pgm.o
-	$(CC) -o remove_background build/remove_background.o build/pgm.o
+normalize: build/normalize.o build/pgm.o
+	$(CC) -o normalize build/normalize.o build/pgm.o
 
 decrease_colors_count: build/decrease_colors_count.o build/pgm.o
 	$(CC) -o decrease_colors_count build/decrease_colors_count.o build/pgm.o
@@ -31,8 +31,8 @@ hystogram_splitter: build/hystogram_splitter.o build/pgm.o build/hystograms.o
 build/bitonize.o: bitonize.cpp types.h constants.h
 	$(CC) -c -o build/bitonize.o bitonize.cpp
 
-build/remove_background.o: remove_background.cpp types.h pgm.h constants.h
-	$(CC) -c -o build/remove_background.o remove_background.cpp
+build/normalize.o: normalize.cpp types.h pgm.h constants.h
+	$(CC) -c -o build/normalize.o normalize.cpp
 
 build/decrease_colors_count.o: decrease_colors_count.cpp types.h pgm.h constants.h
 	$(CC) -c -o build/decrease_colors_count.o decrease_colors_count.cpp
