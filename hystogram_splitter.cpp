@@ -65,6 +65,98 @@ GrayImage make_step(const GrayImage &q, const vector<vector<double> > &dispersio
     return result;
 }
 
+GrayImage increase_image(const GrayImage &small, int width, int height) {
+    GrayImage result(height, vector<byte> (width));
+    //int vscale(height / small.size() + (height % small.size() == 0 ? 0 : 1)), hscale(width / small[0].size() + (width % small[0].size() == 0 ? 0 : 1));
+    int vscale(CELL_SIZE), hscale(CELL_SIZE);
+
+    //corners
+    for (int i = 0; i < vscale / 2; ++i) {
+        for (int j = 0; j < hscale / 2; ++j) {
+            result[i][j] = small[0][0];
+            result[height - i - 1][j] = small.back()[0];
+            result[i][width - j - 1] = small[0].back();
+            result[height - i - 1][width - j - 1] = small.back().back();
+        }
+    }
+
+    //left and right borders
+    for (int i = 0; i < height - vscale; ++i) {
+        {
+            int top_val = small[i / vscale][0];
+            int bottom_val = small[i / vscale + 1][0];
+            int pos = i % vscale;
+            for (int j = 0; j < hscale / 2; ++j) {
+                result[i + vscale / 2][j] = (bottom_val * pos + top_val * (vscale - pos)) / vscale;
+            }
+        }
+        {
+            int top_val = small[i / vscale].back();
+            int bottom_val = small[i / vscale + 1].back();
+            int pos = i % vscale;
+            for (int j = width - hscale / 2; j < width; ++j) {
+                result[i + vscale / 2][j] = (bottom_val * pos + top_val * (vscale - pos)) / vscale;
+            }
+        }
+    }
+
+    //top and bottom borders
+    for (int j = 0; j < width - hscale; ++j) {
+        {
+            int left_val = small[0][j / hscale];
+            int right_val = small[0][j / hscale + 1];
+            std::swap(left_val, right_val); //WTF?!?!?! why it works?
+            int pos = j % hscale;
+            for (int i = 0; i < vscale / 2; ++i) {
+                result[i][j + hscale / 2] = (left_val * pos + right_val * (hscale - pos)) / hscale;
+            }
+        }
+        {
+            int left_val = small.back()[j / hscale];
+            int right_val = small.back()[j / hscale + 1];
+            std::swap(left_val, right_val);
+            int pos = j % hscale;
+            for (int i = height - vscale / 2; i < height; ++i) {
+                result[i][j + hscale / 2] = (left_val * pos + right_val * (hscale - pos)) / hscale;
+            }
+        }
+    }
+    for (int i = 0; i < height - vscale; ++i) {
+        for (int j = 0; j < width - hscale; ++j) {
+            int vpos = i % vscale, hpos = j % hscale;
+            /*
+             * a_b
+             * |/|
+             * c-a
+             *
+             * f(x, y) = A*x + B*y + C
+             * f(1, 0) = b
+             * f(0,1) = c
+             *
+             * (1, 1) = (hscale - 1, vscale - 1)
+             */
+            int A, B, C;
+            int a, b, c;
+            b = small[i / vscale][j / hscale + 1];
+            c = small[i / vscale + 1][j / hscale];
+            if (vpos*(hscale - 1) + hpos*(vscale - 1) < (hscale - 1)*(vscale - 1)) {//top left triangle
+                a = small[i / vscale][j / hscale];
+                C = a;
+                A = b - a;
+                B = c - a;
+            }
+            else {//bottom right triangle
+                a = small[i / vscale + 1][j / vscale + 1];
+                C = c + b - a;
+                A = a - c;
+                B = a - b;
+            }
+            result[i + vscale / 2][j + hscale / 2] = (A*hpos*(vscale-1) + B*vpos*(hscale-1) + C*(vscale-1)*(hscale-1)) / ((vscale-1)*(hscale-1));
+        }
+    }
+    return result;
+}
+
 int main(int argc, char *argv[]) {
     FILE *data = fopen(argv[1], "r");
     byte *pixels;
@@ -106,20 +198,9 @@ int main(int argc, char *argv[]) {
         white = make_step(white_q, dispersions, white, false);
     }
 
-    GrayImage big(image);
-    for (int i = 0; i < height; ++i) {
-        for (int j = 0; j < width; ++j) {
-            big[i][j] = black[i / CELL_SIZE][j / CELL_SIZE];
-        }
-    }
-    save_pgm(fopen(argv[2], "w"), big);
+    save_pgm(fopen(argv[2], "w"), increase_image(black, width, height));
 
-    for (int i = 0; i < height; ++i) {
-        for (int j = 0; j < width; ++j) {
-            big[i][j] = white[i / CELL_SIZE][j / CELL_SIZE];
-        }
-    }
-    save_pgm(fopen(argv[3], "w"), white);
+    save_pgm(fopen(argv[3], "w"), increase_image(white, width, height));
 
     if (argc > 4) {
         save_pgm(fopen(argv[4], "w"), black_q);
