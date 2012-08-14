@@ -2,36 +2,32 @@
 #include <cstdlib>
 #include <cmath>
 
-#include "pgm.h"
 #include "hystograms.h"
+
+#include "DjVuGlobal.h"
+#include "GException.h"
+#include "GSmartPointer.h"
+#include "GContainer.h"
+#include "ByteStream.h"
+#include "IFFByteStream.h"
+#include "GRect.h"
+#include "GBitmap.h"
+#include "JB2Image.h"
+#include "DjVuInfo.h"
+#include "GOS.h"
+#include "GURL.h"
+#include "DjVuMessage.h"
 
 const int CELL_SIZE = 20;
 
 const double QUANTILE = 0.05;
 
-//const double EPS_STEP = 255./5000*2;//0.05;
 double EPS_STEP;
 int ROUNDS;
 
-//const int ROUNDS = 20000;
-
-double dispersion(const Hystogram &hystogram) {
-    double sum(0.0), sum_sqr(0.0);
-    int elements(0);
-    for (int i = 0; i < COLORS_COUNT; ++i) {
-        sum += i*hystogram[i];
-        sum_sqr += i*i*hystogram[i];
-        elements += hystogram[i];
-    }
-    if (!elements) {
-        return 0;
-    }
-    return sqrt(sum_sqr/elements - sum*sum/(elements*elements)) / (COLORS_COUNT / 2);
-}
-
-vector<vector<double> > make_step(const GrayImage &q, const vector<vector<double> > &dispersions, const vector<vector<double> > &image, bool up) {
+vector<vector<double> > make_step(const GBitmap &q, const vector<vector<double> > &image, bool up) {
     vector<vector<double> > result(image);
-    int width = image[0].size(), height = image.size();
+    int width = q.columns(), height = q.rows();
     int direction = up ? 1 : -1;
 
     for (int i = 0; i < result.size(); ++i) {
@@ -67,8 +63,8 @@ vector<vector<double> > make_step(const GrayImage &q, const vector<vector<double
     return result;
 }
 
-GrayImage increase_image(const vector<vector<double> > &small, int width, int height) {
-    GrayImage result(height, vector<byte> (width));
+void increase_image(const vector<vector<double> > &small, GBitmap &result) {
+    int width = result.columns(), height = result.rows();
     //int vscale(height / small.size() + (height % small.size() == 0 ? 0 : 1)), hscale(width / small[0].size() + (width % small[0].size() == 0 ? 0 : 1));
     int vscale(CELL_SIZE), hscale(CELL_SIZE);
 
@@ -156,27 +152,34 @@ GrayImage increase_image(const vector<vector<double> > &small, int width, int he
             result[i + vscale / 2][j + hscale / 2] = static_cast<int>((A*hpos*(vscale-1) + B*vpos*(hscale-1) + C*(vscale-1)*(hscale-1)) / ((vscale-1)*(hscale-1)));
         }
     }
-    return result;
 }
 
 int main(int argc, char *argv[]) {
-    FILE *data = fopen(argv[1], "r");
-    byte *pixels;
-    int32 width, height, row_size, rows_count;
+    GP<ByteStream> data = ByteStream::create(GURL::Filename::UTF8(argv[1]), "rb");
+    GP<GBitmap> gsource = GBitmap::create(*data);
+    GBitmap &source = *gsource;
 
-    load_pgm(data, &width, &height, &row_size, &rows_count, &pixels, 0);
+    int32 width, height;
+    width = source.columns();
+    height = source.rows();
 
-    GrayImage image = c_array_to_vector(pixels, width, height);
+    GrayImage image(height, vector<byte> (width));
+    for (int i = 0; i < height; ++i) {
+        for (int j = 0; j < width; ++j) {
+            image[i][j] = source[i][j];
+        }
+    }
 
     int32 v_cells = height / CELL_SIZE + (height % CELL_SIZE ? 1 : 0);
     int32 h_cells = width / CELL_SIZE + (width % CELL_SIZE ? 1 : 0);
 
-    GrayImage black_q(v_cells, vector<byte> (h_cells));
-    GrayImage white_q(black_q);
-    vector<vector<double> > dispersions(v_cells, vector<double> (h_cells));
+    GP<GBitmap> gblack_q = GBitmap::create(v_cells, h_cells);
+    GP<GBitmap> gwhite_q = GBitmap::create(v_cells, h_cells);
+    GBitmap &black_q = *gblack_q;
+    GBitmap &white_q = *gwhite_q;
 
-    for (int i = 0; i < black_q.size(); ++i) {
-        for (int j = 0; j < black_q[i].size(); ++j) {
+    for (int i = 0; i < v_cells; ++i) {
+        for (int j = 0; j < h_cells; ++j) {
             Hystogram hystogram;
             for (auto &k : hystogram) {
                 k = 0;
@@ -186,44 +189,35 @@ int main(int argc, char *argv[]) {
                     ++hystogram[image[i*CELL_SIZE + k][j*CELL_SIZE + l]];
                 }
             }
-            black_q[i][j] = get_left_quantile(hystogram, QUANTILE);
-            white_q[i][j] = get_right_quantile(hystogram, QUANTILE);
-            dispersions[i][j] = dispersion(hystogram);
+            black_q[i][j] = get_right_quantile(hystogram, QUANTILE);
+            white_q[i][j] = get_left_quantile(hystogram, QUANTILE);
         }
     }
 
     vector<vector<double> > black(v_cells, vector<double> (h_cells, 0));
     vector<vector<double> > white(v_cells, vector<double> (h_cells, 255));
-    /*for (int i = 0; i < v_cells; ++i) {
-        for (int j = 0; j < h_cells; ++j) {
-            black[i][j] = static_cast<double>(black_q[i][j]);
-        }
-    }*/
 
     EPS_STEP = 255.0 / std::max(v_cells, h_cells) / 10.0;
     ROUNDS = 255.0 / EPS_STEP + 1;
     std::cerr << "ROUNDS: " << ROUNDS << ", EPS_STEP: " << EPS_STEP << '\n';
     for (int round = 0; round < ROUNDS; ++round) {
-        black = make_step(black_q, dispersions, black, true);
-        white = make_step(white_q, dispersions, white, false);
+        black = make_step(black_q, black, false);
+        white = make_step(white_q, white, true);
     }
 
-    save_pgm(fopen(argv[2], "w"), increase_image(black, width, height));
-    /*vector<vector<byte> > bb(v_cells, vector<byte> (h_cells));
-    for (int i = 0; i < v_cells; ++i) {
-        for (int j = 0; j < h_cells; ++j) {
-            bb[i][j] = static_cast<int>(black[i][j]);
-        }
-        std::cout << '\n';
-    }
-    save_pgm(fopen(argv[2], "w"), bb);*/
+    GP<GBitmap> gblack_original_size = GBitmap::create(v_cells, h_cells);
+    GBitmap &black_original_size = *gblack_original_size;
+    increase_image(black, black_original_size);
+    black_original_size.save_pgm(*ByteStream::create(GURL::Filename::UTF8(argv[2]), "wb"));
 
-    save_pgm(fopen(argv[3], "w"), increase_image(white, width, height));
+    GP<GBitmap> gwhite_original_size = GBitmap::create(v_cells, h_cells);
+    GBitmap &white_original_size = *gwhite_original_size;
+    increase_image(white, white_original_size);
+    white_original_size.save_pgm(*ByteStream::create(GURL::Filename::UTF8(argv[3]), "wb"));
 
-    if (argc > 4) {
-        save_pgm(fopen(argv[4], "w"), black_q);
-        save_pgm(fopen(argv[5], "w"), white_q);
-    }
+    /*save_pgm(fopen(argv[2], "w"), increase_image(black, width, height));
+
+    save_pgm(fopen(argv[3], "w"), increase_image(white, width, height));*/
 
     return 0;
 }

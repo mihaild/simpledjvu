@@ -1,4 +1,5 @@
 CC = g++ -O3 -std=c++0x
+DJVULIBRE_PATH = /home/mihaild/djvulibre/
 
 BIN_FILES = bitonize normalize decrease_colors_count bitonize_threshold build_hystograms local_threshold classifier_bitonize
 
@@ -26,7 +27,8 @@ classifier_bitonize: build/classifier_bitonize.o build/pgm.o build/disjoint_set_
 	$(CC) -o classifier_bitonize build/classifier_bitonize.o build/pgm.o build/disjoint_set_forest.o build/connected_components.o build/quality.o
 
 hystogram_splitter: build/hystogram_splitter.o build/pgm.o build/hystograms.o
-	$(CC) -o hystogram_splitter build/hystogram_splitter.o build/pgm.o build/hystograms.o
+	libtool --mode=link g++ -o hystogram_splitter build/hystogram_splitter.o -DHAVE_CONFIG_H -I/home/mihaild/djvulibre/libdjvu/ -I/home/mihaild/djvulibre/tools -I/home/mihaild/djvulibre/ /home/mihaild/djvulibre/libdjvu/libdjvulibre.la build/pgm.o build/hystograms.o
+	#$(CC) -o hystogram_splitter build/hystogram_splitter.o build/pgm.o build/hystograms.o
 
 build/bitonize.o: bitonize.cpp types.h constants.h
 	$(CC) -c -o build/bitonize.o bitonize.cpp
@@ -65,7 +67,10 @@ build/connected_components.o: connected_components.cpp connected_components.h qu
 	$(CC) -c -o build/connected_components.o connected_components.cpp
 
 build/hystogram_splitter.o: hystogram_splitter.cpp pgm.h hystograms.h
-	$(CC) -c -o build/hystogram_splitter.o hystogram_splitter.cpp
+	#$(CC) -c -o build/hystogram_splitter.o hystogram_splitter.cpp
+	#black magick
+	#@todo: understand, how does it work
+	$(CC) -c -o build/hystogram_splitter.o hystogram_splitter.cpp -I$(DJVULIBRE_PATH) -I$(DJVULIBRE_PATH)/tools -I$(DJVULIBRE_PATH)/libdjvu -DHAVE_CONFIG_H -DNDEBUG -pthread -DTHREADMODEL=POSIXTHREADS
 
 clean:
 	rm -f build/* $(BIN_FILES)
