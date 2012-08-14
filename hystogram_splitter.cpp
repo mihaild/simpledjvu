@@ -7,11 +7,13 @@
 
 const int CELL_SIZE = 20;
 
-const int ROUNDS = 1000;
-
 const double QUANTILE = 0.05;
 
-const double EPS_STEP = 0.5;
+//const double EPS_STEP = 255./5000*2;//0.05;
+double EPS_STEP;
+int ROUNDS;
+
+//const int ROUNDS = 20000;
 
 double dispersion(const Hystogram &hystogram) {
     double sum(0.0), sum_sqr(0.0);
@@ -198,6 +200,9 @@ int main(int argc, char *argv[]) {
         }
     }*/
 
+    EPS_STEP = 255.0 / std::max(v_cells, h_cells) / 10.0;
+    ROUNDS = 255.0 / EPS_STEP + 1;
+    std::cerr << "ROUNDS: " << ROUNDS << ", EPS_STEP: " << EPS_STEP << '\n';
     for (int round = 0; round < ROUNDS; ++round) {
         black = make_step(black_q, dispersions, black, true);
         white = make_step(white_q, dispersions, white, false);
