@@ -63,14 +63,12 @@ vector<vector<double> > make_step(const GBitmap &q, const vector<vector<double> 
     return result;
 }
 
-void increase_image(const vector<vector<double> > &small, GBitmap &result) {
+void increase_image(const vector<vector<double> > &small, GBitmap &result, int scale = CELL_SIZE) {
     int width = result.columns(), height = result.rows();
-    //int vscale(height / small.size() + (height % small.size() == 0 ? 0 : 1)), hscale(width / small[0].size() + (width % small[0].size() == 0 ? 0 : 1));
-    int vscale(CELL_SIZE), hscale(CELL_SIZE);
 
     //corners
-    for (int i = 0; i < vscale / 2; ++i) {
-        for (int j = 0; j < hscale / 2; ++j) {
+    for (int i = 0; i < scale / 2; ++i) {
+        for (int j = 0; j < scale / 2; ++j) {
             result[i][j] = static_cast<int>(small[0][0]);
             result[height - i - 1][j] = static_cast<int>(small.back()[0]);
             result[i][width - j - 1] = static_cast<int>(small[0].back());
@@ -79,49 +77,49 @@ void increase_image(const vector<vector<double> > &small, GBitmap &result) {
     }
 
     //left and right borders
-    for (int i = 0; i < height - vscale; ++i) {
+    for (int i = 0; i < height - scale; ++i) {
         {
-            double top_val = small[i / vscale][0];
-            double bottom_val = small[i / vscale + 1][0];
-            int pos = i % vscale;
-            for (int j = 0; j < hscale / 2; ++j) {
-                result[i + vscale / 2][j] = static_cast<int>((bottom_val * pos + top_val * (vscale - pos)) / vscale);
+            double top_val = small[i / scale][0];
+            double bottom_val = small[i / scale + 1][0];
+            int pos = i % scale;
+            for (int j = 0; j < scale / 2; ++j) {
+                result[i + scale / 2][j] = static_cast<int>((bottom_val * pos + top_val * (scale - pos)) / scale);
             }
         }
         {
-            double top_val = small[i / vscale].back();
-            double bottom_val = small[i / vscale + 1].back();
-            int pos = i % vscale;
-            for (int j = width - hscale / 2; j < width; ++j) {
-                result[i + vscale / 2][j] = static_cast<int>((bottom_val * pos + top_val * (vscale - pos)) / vscale);
+            double top_val = small[i / scale].back();
+            double bottom_val = small[i / scale + 1].back();
+            int pos = i % scale;
+            for (int j = width - scale / 2; j < width; ++j) {
+                result[i + scale / 2][j] = static_cast<int>((bottom_val * pos + top_val * (scale - pos)) / scale);
             }
         }
     }
 
     //top and bottom borders
-    for (int j = 0; j < width - hscale; ++j) {
+    for (int j = 0; j < width - scale; ++j) {
         {
-            double left_val = small[0][j / hscale];
-            double right_val = small[0][j / hscale + 1];
+            double left_val = small[0][j / scale];
+            double right_val = small[0][j / scale + 1];
             std::swap(left_val, right_val); //WTF?!?!?! why does it work?
-            int pos = j % hscale;
-            for (int i = 0; i < vscale / 2; ++i) {
-                result[i][j + hscale / 2] = static_cast<int>((left_val * pos + right_val * (hscale - pos)) / hscale);
+            int pos = j % scale;
+            for (int i = 0; i < scale / 2; ++i) {
+                result[i][j + scale / 2] = static_cast<int>((left_val * pos + right_val * (scale - pos)) / scale);
             }
         }
         {
-            double left_val = small.back()[j / hscale];
-            double right_val = small.back()[j / hscale + 1];
+            double left_val = small.back()[j / scale];
+            double right_val = small.back()[j / scale + 1];
             std::swap(left_val, right_val);
-            int pos = j % hscale;
-            for (int i = height - vscale / 2; i < height; ++i) {
-                result[i][j + hscale / 2] = static_cast<int>((left_val * pos + right_val * (hscale - pos)) / hscale);
+            int pos = j % scale;
+            for (int i = height - scale / 2; i < height; ++i) {
+                result[i][j + scale / 2] = static_cast<int>((left_val * pos + right_val * (scale - pos)) / scale);
             }
         }
     }
-    for (int i = 0; i < height - vscale; ++i) {
-        for (int j = 0; j < width - hscale; ++j) {
-            int vpos = i % vscale, hpos = j % hscale;
+    for (int i = 0; i < height - scale; ++i) {
+        for (int j = 0; j < width - scale; ++j) {
+            int vpos = i % scale, hpos = j % scale;
             /*
              * a_b
              * |/|
@@ -131,25 +129,25 @@ void increase_image(const vector<vector<double> > &small, GBitmap &result) {
              * f(1, 0) = b
              * f(0,1) = c
              *
-             * (1, 1) = (hscale - 1, vscale - 1)
+             * (1, 1) = (scale - 1, scale - 1)
              */
             double A, B, C;
             double a, b, c;
-            b = small[i / vscale][j / hscale + 1];
-            c = small[i / vscale + 1][j / hscale];
-            if (vpos*(hscale - 1) + hpos*(vscale - 1) < (hscale - 1)*(vscale - 1)) {//top left triangle
-                a = small[i / vscale][j / hscale];
+            b = small[i / scale][j / scale + 1];
+            c = small[i / scale + 1][j / scale];
+            if (vpos*(scale - 1) + hpos*(scale - 1) < (scale - 1)*(scale - 1)) {//top left triangle
+                a = small[i / scale][j / scale];
                 C = a;
                 A = b - a;
                 B = c - a;
             }
             else {//bottom right triangle
-                a = small[i / vscale + 1][j / vscale + 1];
+                a = small[i / scale + 1][j / scale + 1];
                 C = c + b - a;
                 A = a - c;
                 B = a - b;
             }
-            result[i + vscale / 2][j + hscale / 2] = static_cast<int>((A*hpos*(vscale-1) + B*vpos*(hscale-1) + C*(vscale-1)*(hscale-1)) / ((vscale-1)*(hscale-1)));
+            result[i + scale / 2][j + scale / 2] = static_cast<int>((A*hpos*(scale-1) + B*vpos*(scale-1) + C*(scale-1)*(scale-1)) / ((scale-1)*(scale-1)));
         }
     }
 }
