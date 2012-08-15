@@ -194,8 +194,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    vector<vector<double> > black(v_cells, vector<double> (h_cells, 0));
-    vector<vector<double> > white(v_cells, vector<double> (h_cells, 255));
+    vector<vector<double> > black(v_cells, vector<double> (h_cells, 255));
+    vector<vector<double> > white(v_cells, vector<double> (h_cells, 0));
 
     EPS_STEP = 255.0 / std::max(v_cells, h_cells) / 10.0;
     ROUNDS = 255.0 / EPS_STEP + 1;
@@ -205,19 +205,17 @@ int main(int argc, char *argv[]) {
         white = make_step(white_q, white, true);
     }
 
-    GP<GBitmap> gblack_original_size = GBitmap::create(v_cells, h_cells);
+    GP<GBitmap> gblack_original_size = GBitmap::create(height, width);
     GBitmap &black_original_size = *gblack_original_size;
+    black_original_size.set_grays(256);
     increase_image(black, black_original_size);
     black_original_size.save_pgm(*ByteStream::create(GURL::Filename::UTF8(argv[2]), "wb"));
 
-    GP<GBitmap> gwhite_original_size = GBitmap::create(v_cells, h_cells);
+    GP<GBitmap> gwhite_original_size = GBitmap::create(height, width);
     GBitmap &white_original_size = *gwhite_original_size;
+    white_original_size.set_grays(256);
     increase_image(white, white_original_size);
     white_original_size.save_pgm(*ByteStream::create(GURL::Filename::UTF8(argv[3]), "wb"));
-
-    /*save_pgm(fopen(argv[2], "w"), increase_image(black, width, height));
-
-    save_pgm(fopen(argv[3], "w"), increase_image(white, width, height));*/
 
     return 0;
 }

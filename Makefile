@@ -1,76 +1,41 @@
-CC = g++ -O3 -std=c++0x
-DJVULIBRE_PATH = /home/mihaild/djvulibre/
+DJVULIBRE_PATH = /home/mihaild/djvulibre
+CC = g++ -O3 -std=c++0x -MMD
+INCLUDES=-I$(DJVULIBRE_PATH) -I$(DJVULIBRE_PATH)/libdjvu -I$(DJVULIBRE_PATH)/tools
+CXXFLAGS=$(INCLUDES) -DHAVE_CONFIG_H -pthread -DTHREADMODEL=POSIXTHREADS
+LINK=g++ -O3
 
-BIN_FILES = bitonize normalize decrease_colors_count bitonize_threshold build_hystograms local_threshold classifier_bitonize
+BIN_FILES = bitonize normalize decrease_colors_count bitonize_threshold build_hystograms local_threshold classifier_bitonize hystogram_splitter normalize
 
 all: $(BIN_FILES)
 
 bitonize: build/bitonize.o build/pgm.o
-	$(CC) -o bitonize build/bitonize.o build/pgm.o
+	$(LINK) -o bitonize $^
 
 normalize: build/normalize.o build/pgm.o
-	$(CC) -o normalize build/normalize.o build/pgm.o
+	$(LINK) -o normalize $^
 
 decrease_colors_count: build/decrease_colors_count.o build/pgm.o
-	$(CC) -o decrease_colors_count build/decrease_colors_count.o build/pgm.o
+	$(LINK) -o decrease_colors_count $^ 
 
 bitonize_threshold: build/bitonize_threshold.o build/pgm.o
-	$(CC) -o bitonize_threshold build/bitonize_threshold.o build/pgm.o
+	$(LINK) -o bitonize_threshold $^
 
 build_hystograms: build/build_hystograms.o build/hystograms.o build/pgm.o
-	$(CC) -o build_hystograms build/build_hystograms.o build/hystograms.o build/pgm.o
+	$(LINK) -o build_hystograms $^
 
 local_threshold: build/local_threshold.o build/hystograms.o build/pgm.o
-	$(CC) -o local_threshold build/local_threshold.o build/hystograms.o build/pgm.o
+	$(LINK) -o local_threshold $^
 
 classifier_bitonize: build/classifier_bitonize.o build/pgm.o build/disjoint_set_forest.o build/connected_components.o build/quality.o
-	$(CC) -o classifier_bitonize build/classifier_bitonize.o build/pgm.o build/disjoint_set_forest.o build/connected_components.o build/quality.o
+	$(LINK) -o classifier_bitonize $^
 
-hystogram_splitter: build/hystogram_splitter.o build/pgm.o build/hystograms.o
-	libtool --mode=link g++ -o hystogram_splitter build/hystogram_splitter.o -DHAVE_CONFIG_H -I/home/mihaild/djvulibre/libdjvu/ -I/home/mihaild/djvulibre/tools -I/home/mihaild/djvulibre/ /home/mihaild/djvulibre/libdjvu/libdjvulibre.la build/pgm.o build/hystograms.o
-	#$(CC) -o hystogram_splitter build/hystogram_splitter.o build/pgm.o build/hystograms.o
+hystogram_splitter: build/hystogram_splitter.o build/hystograms.o
+	$(LINK) -o hystogram_splitter $^ -DHAVE_CONFIG_H -ldjvulibre
 
-build/bitonize.o: bitonize.cpp types.h constants.h
-	$(CC) -c -o build/bitonize.o bitonize.cpp
-
-build/normalize.o: normalize.cpp types.h pgm.h constants.h
-	$(CC) -c -o build/normalize.o normalize.cpp
-
-build/decrease_colors_count.o: decrease_colors_count.cpp types.h pgm.h constants.h
-	$(CC) -c -o build/decrease_colors_count.o decrease_colors_count.cpp
-
-build/bitonize_threshold.o: bitonize_threshold.cpp types.h pgm.h constants.h
-	$(CC) -c -o build/bitonize_threshold.o bitonize_threshold.cpp
-
-build/build_hystograms.o: build_hystograms.cpp types.h pgm.h constants.h
-	$(CC) -c -o build/build_hystograms.o build_hystograms.cpp
-
-build/local_threshold.o: local_threshold.cpp types.h pgm.h constants.h
-	$(CC) -c -o build/local_threshold.o local_threshold.cpp
-
-build/classifier_bitonize.o: classifier_bitonize.cpp types.h pgm.h constants.h disjoint_set_forest.h connected_components.h
-	$(CC) -c -o build/classifier_bitonize.o classifier_bitonize.cpp
-
-build/hystograms.o: hystograms.cpp types.h pgm.h constants.h
-	$(CC) -c -o build/hystograms.o hystograms.cpp
-
-build/pgm.o: pgm.cpp types.h constants.h
-	$(CC) -c -o build/pgm.o pgm.cpp
-
-build/disjoint_set_forest.o: disjoint_set_forest.cpp disjoint_set_forest.h
-	$(CC) -c -o build/disjoint_set_forest.o disjoint_set_forest.cpp
-
-build/quality.o: quality.cpp quality.h
-	$(CC) -c -o build/quality.o quality.cpp
-
-build/connected_components.o: connected_components.cpp connected_components.h quality.h
-	$(CC) -c -o build/connected_components.o connected_components.cpp
-
-build/hystogram_splitter.o: hystogram_splitter.cpp pgm.h hystograms.h
-	#$(CC) -c -o build/hystogram_splitter.o hystogram_splitter.cpp
-	#black magick
-	#@todo: understand, how does it work
-	$(CC) -c -o build/hystogram_splitter.o hystogram_splitter.cpp -I$(DJVULIBRE_PATH) -I$(DJVULIBRE_PATH)/tools -I$(DJVULIBRE_PATH)/libdjvu -DHAVE_CONFIG_H -DNDEBUG -pthread -DTHREADMODEL=POSIXTHREADS
+build/%.o build/%.d: %.cpp
+	$(CC) $(CXXFLAGS) -c -o build/$*.o $*.cpp
 
 clean:
 	rm -f build/* $(BIN_FILES)
+
+-include $(wildcard build/*.d)
