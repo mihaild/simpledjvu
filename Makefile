@@ -12,7 +12,7 @@ bitonize: build/bitonize.o build/pgm.o
 	$(LINK) -o bitonize $^
 
 normalize: build/normalize.o build/pgm.o
-	$(LINK) -o normalize $^
+	$(LINK) -o normalize $^ -DHAVE_CONFIG_H -ldjvulibre
 
 decrease_colors_count: build/decrease_colors_count.o build/pgm.o
 	$(LINK) -o decrease_colors_count $^ 
