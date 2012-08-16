@@ -1,26 +1,27 @@
-#include <iostream>
 #include <cstdlib>
 #include <cmath>
+#include <algorithm>
 
-#include "hystograms.h"
+#include "djvulibre.h"
 
-#include "DjVuGlobal.h"
-#include "GException.h"
-#include "GSmartPointer.h"
-#include "GContainer.h"
-#include "ByteStream.h"
-#include "IFFByteStream.h"
-#include "GRect.h"
-#include "GBitmap.h"
-#include "JB2Image.h"
-#include "DjVuInfo.h"
-#include "GOS.h"
-#include "GURL.h"
-#include "DjVuMessage.h"
+#include "types.h"
+#include "hystogram_splitter.h"
 
-const int CELL_SIZE = 20;
+byte get_right_quantile(const Hystogram &hystogram, double level) {
+    int need = std::accumulate(hystogram.begin(), hystogram.end(), 0) * level;
+    int current_sum = 0;
+    for (byte i = hystogram.size() - 1; i >= 0; --i) {
+        current_sum += hystogram[i];
+        if (current_sum >= need) {
+            return i;
+        }
+    }
+    return 0;
+}
 
-const double QUANTILE = 0.05;
+byte get_left_quantile(const Hystogram &hystogram, double level) {
+    return get_right_quantile(hystogram, 1.0 - level);
+}
 
 vector<vector<double> > make_step(const GBitmap &q, const vector<vector<double> > &image, bool up, double eps_step) {
     vector<vector<double> > result(image);
@@ -152,7 +153,7 @@ void increase_image(const vector<vector<double> > &small, GBitmap &result, int s
     }
 }
 
-void get_image_parts(const GBitmap &image, GBitmap &black_result, GBitmap &white_result, int cell_size = CELL_SIZE, int back_scale = CELL_SIZE) {
+void get_image_parts(const GBitmap &image, GBitmap &black_result, GBitmap &white_result, int cell_size, int back_scale) {
     int width = image.columns(), height = image.rows();
     int v_cells = height / cell_size + (height % cell_size ? 1 : 0), h_cells = width / cell_size + (width % cell_size ? 1 : 0);
     GP<GBitmap> gblack_q = GBitmap::create(v_cells, h_cells);
@@ -181,7 +182,6 @@ void get_image_parts(const GBitmap &image, GBitmap &black_result, GBitmap &white
 
     double eps_step = 255.0 / std::max(v_cells, h_cells) / 10.0;
     int rounds = 255.0 / eps_step + 1;
-    std::cerr << "ROUNDS: " << rounds << ", EPS_STEP: " << eps_step << '\n';
     for (int round = 0; round < rounds; ++round) {
         black = make_step(black_q, black, false, eps_step);
         white = make_step(white_q, white, true, eps_step);
@@ -194,23 +194,4 @@ void get_image_parts(const GBitmap &image, GBitmap &black_result, GBitmap &white
     white_result.init(v_cells * back_scale, h_cells * back_scale);
     white_result.set_grays(256);
     increase_image(white, white_result, back_scale);
-}
-
-int main(int argc, char *argv[]) {
-    GP<ByteStream> data = ByteStream::create(GURL::Filename::UTF8(argv[1]), "rb");
-    GP<GBitmap> gsource = GBitmap::create(*data);
-    GBitmap &source = *gsource;
-
-
-    GP<GBitmap> gblack_original_size = GBitmap::create();
-    GBitmap &black_original_size = *gblack_original_size;
-    GP<GBitmap> gwhite_original_size = GBitmap::create();
-    GBitmap &white_original_size = *gwhite_original_size;
-
-    get_image_parts(source, black_original_size, white_original_size, CELL_SIZE, CELL_SIZE);
-
-    black_original_size.save_pgm(*ByteStream::create(GURL::Filename::UTF8(argv[2]), "wb"));
-    white_original_size.save_pgm(*ByteStream::create(GURL::Filename::UTF8(argv[3]), "wb"));
-
-    return 0;
 }
