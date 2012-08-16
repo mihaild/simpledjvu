@@ -11,7 +11,7 @@ all: $(BIN_FILES)
 bitonize: build/bitonize.o build/pgm.o
 	$(LINK) -o bitonize $^
 
-normalize: build/normalize.o build/pgm.o
+normalize: build/normalize.o
 	$(LINK) -o normalize $^ -DHAVE_CONFIG_H -ldjvulibre
 
 decrease_colors_count: build/decrease_colors_count.o build/pgm.o
