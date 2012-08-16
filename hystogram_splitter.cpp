@@ -22,10 +22,7 @@ const int CELL_SIZE = 20;
 
 const double QUANTILE = 0.05;
 
-double EPS_STEP;
-int ROUNDS;
-
-vector<vector<double> > make_step(const GBitmap &q, const vector<vector<double> > &image, bool up) {
+vector<vector<double> > make_step(const GBitmap &q, const vector<vector<double> > &image, bool up, double eps_step) {
     vector<vector<double> > result(image);
     int width = q.columns(), height = q.rows();
     int direction = up ? 1 : -1;
@@ -52,10 +49,10 @@ vector<vector<double> > make_step(const GBitmap &q, const vector<vector<double> 
                 }
                 double avg = s / n;
                 if (up) {
-                    result[i][j] = (avg + EPS_STEP > q[i][j]) ? q[i][j] : (avg + EPS_STEP);
+                    result[i][j] = (avg + eps_step > q[i][j]) ? q[i][j] : (avg + eps_step);
                 }
                 else {
-                    result[i][j] = (avg - EPS_STEP < q[i][j]) ? q[i][j] : (avg - EPS_STEP);
+                    result[i][j] = (avg - eps_step < q[i][j]) ? q[i][j] : (avg - eps_step);
                 }
             }
         }
@@ -63,7 +60,10 @@ vector<vector<double> > make_step(const GBitmap &q, const vector<vector<double> 
     return result;
 }
 
-void increase_image(const vector<vector<double> > &small, GBitmap &result, int scale = CELL_SIZE) {
+/*
+ * fails if small.size > result.size/scale
+ */
+void increase_image(const vector<vector<double> > &small, GBitmap &result, int scale) {
     int width = result.columns(), height = result.rows();
 
     //corners
@@ -152,25 +152,9 @@ void increase_image(const vector<vector<double> > &small, GBitmap &result, int s
     }
 }
 
-int main(int argc, char *argv[]) {
-    GP<ByteStream> data = ByteStream::create(GURL::Filename::UTF8(argv[1]), "rb");
-    GP<GBitmap> gsource = GBitmap::create(*data);
-    GBitmap &source = *gsource;
-
-    int32 width, height;
-    width = source.columns();
-    height = source.rows();
-
-    GrayImage image(height, vector<byte> (width));
-    for (int i = 0; i < height; ++i) {
-        for (int j = 0; j < width; ++j) {
-            image[i][j] = source[i][j];
-        }
-    }
-
-    int32 v_cells = height / CELL_SIZE + (height % CELL_SIZE ? 1 : 0);
-    int32 h_cells = width / CELL_SIZE + (width % CELL_SIZE ? 1 : 0);
-
+void get_image_parts(const GBitmap &image, GBitmap &black_result, GBitmap &white_result, int cell_size = CELL_SIZE, int back_scale = CELL_SIZE) {
+    int width = image.columns(), height = image.rows();
+    int v_cells = height / cell_size + (height % cell_size ? 1 : 0), h_cells = width / cell_size + (width % cell_size ? 1 : 0);
     GP<GBitmap> gblack_q = GBitmap::create(v_cells, h_cells);
     GP<GBitmap> gwhite_q = GBitmap::create(v_cells, h_cells);
     GBitmap &black_q = *gblack_q;
@@ -182,9 +166,9 @@ int main(int argc, char *argv[]) {
             for (auto &k : hystogram) {
                 k = 0;
             }
-            for (int k = 0; k < CELL_SIZE && i*CELL_SIZE + k < height; ++k) {
-                for (int l = 0; l < CELL_SIZE && j*CELL_SIZE + l < width; ++l) {
-                    ++hystogram[image[i*CELL_SIZE + k][j*CELL_SIZE + l]];
+            for (int k = 0; k < cell_size && i*cell_size + k < height; ++k) {
+                for (int l = 0; l < cell_size && j*cell_size + l < width; ++l) {
+                    ++hystogram[image[i*cell_size + k][j*cell_size + l]];
                 }
             }
             black_q[i][j] = get_right_quantile(hystogram, QUANTILE);
@@ -195,24 +179,37 @@ int main(int argc, char *argv[]) {
     vector<vector<double> > black(v_cells, vector<double> (h_cells, 255));
     vector<vector<double> > white(v_cells, vector<double> (h_cells, 0));
 
-    EPS_STEP = 255.0 / std::max(v_cells, h_cells) / 10.0;
-    ROUNDS = 255.0 / EPS_STEP + 1;
-    std::cerr << "ROUNDS: " << ROUNDS << ", EPS_STEP: " << EPS_STEP << '\n';
-    for (int round = 0; round < ROUNDS; ++round) {
-        black = make_step(black_q, black, false);
-        white = make_step(white_q, white, true);
+    double eps_step = 255.0 / std::max(v_cells, h_cells) / 10.0;
+    int rounds = 255.0 / eps_step + 1;
+    std::cerr << "ROUNDS: " << rounds << ", EPS_STEP: " << eps_step << '\n';
+    for (int round = 0; round < rounds; ++round) {
+        black = make_step(black_q, black, false, eps_step);
+        white = make_step(white_q, white, true, eps_step);
     }
 
-    GP<GBitmap> gblack_original_size = GBitmap::create(height, width);
-    GBitmap &black_original_size = *gblack_original_size;
-    black_original_size.set_grays(256);
-    increase_image(black, black_original_size);
-    black_original_size.save_pgm(*ByteStream::create(GURL::Filename::UTF8(argv[2]), "wb"));
+    black_result.init(v_cells * back_scale, h_cells * back_scale);
+    black_result.set_grays(256);
+    increase_image(black, black_result, back_scale);
 
-    GP<GBitmap> gwhite_original_size = GBitmap::create(height, width);
+    white_result.init(v_cells * back_scale, h_cells * back_scale);
+    white_result.set_grays(256);
+    increase_image(white, white_result, back_scale);
+}
+
+int main(int argc, char *argv[]) {
+    GP<ByteStream> data = ByteStream::create(GURL::Filename::UTF8(argv[1]), "rb");
+    GP<GBitmap> gsource = GBitmap::create(*data);
+    GBitmap &source = *gsource;
+
+
+    GP<GBitmap> gblack_original_size = GBitmap::create();
+    GBitmap &black_original_size = *gblack_original_size;
+    GP<GBitmap> gwhite_original_size = GBitmap::create();
     GBitmap &white_original_size = *gwhite_original_size;
-    white_original_size.set_grays(256);
-    increase_image(white, white_original_size);
+
+    get_image_parts(source, black_original_size, white_original_size, CELL_SIZE, CELL_SIZE);
+
+    black_original_size.save_pgm(*ByteStream::create(GURL::Filename::UTF8(argv[2]), "wb"));
     white_original_size.save_pgm(*ByteStream::create(GURL::Filename::UTF8(argv[3]), "wb"));
 
     return 0;
