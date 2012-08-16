@@ -4,9 +4,12 @@ INCLUDES=-I$(DJVULIBRE_PATH) -I$(DJVULIBRE_PATH)/libdjvu -I$(DJVULIBRE_PATH)/too
 CXXFLAGS=$(INCLUDES) -DHAVE_CONFIG_H -pthread -DTHREADMODEL=POSIXTHREADS
 LINK=g++ -O3
 
-BIN_FILES = create_djvu
+BIN_FILES = create_djvu select_threshold_level
 
 all: $(BIN_FILES)
+
+select_threshold_level: build/select_threshold_level.o build/pgm2jb2.o build/jb2tune.o jb2cmp/libjb2cmp.a
+	$(LINK) -o select_threshold_level $^ -DHAVE_CONFIG_H -ldjvulibre
 
 create_djvu: build/create_djvu.o build/hystogram_splitter.o build/normalize.o
 	$(LINK) -o create_djvu $^ -DHAVE_CONFIG_H -ldjvulibre
@@ -14,7 +17,11 @@ create_djvu: build/create_djvu.o build/hystogram_splitter.o build/normalize.o
 build/%.o build/%.d: %.cpp
 	$(CC) $(CXXFLAGS) -c -o build/$*.o $*.cpp
 
+jb2cmp/libjb2cmp.a: 
+	cd jb2cmp && ${MAKE}
+
 clean:
 	rm -f build/* $(BIN_FILES)
+	cd jb2cmp && ${MAKE} clean
 
 -include $(wildcard build/*.d)
