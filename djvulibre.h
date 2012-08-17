@@ -13,3 +13,5 @@
 #include "GOS.h"
 #include "GURL.h"
 #include "DjVuMessage.h"
+#include "JB2Image.h"
+#include "jb2tune.h"

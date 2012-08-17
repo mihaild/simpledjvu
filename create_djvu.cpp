@@ -6,6 +6,7 @@ using std::cout;
 
 #include "hystogram_splitter.h"
 #include "normalize.h"
+#include "select_threshold_level.h"
 
 /*
  * it should be const GBitmap, but for unknown reason GBitmap::save_pgm is not declared as const
