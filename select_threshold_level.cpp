@@ -12,7 +12,7 @@ unsigned int test_size(const GBitmap &image, int threshold) {
 }
 
 unsigned int get_threshold_level(const GBitmap &image) {
-    return 127;
+    return 75;
 }
 
 /*int main(int argc, char *argv[]) {

@@ -61,98 +61,6 @@ vector<vector<double> > make_step(const GBitmap &q, const vector<vector<double> 
     return result;
 }
 
-/*
- * fails if small.size > result.size/scale
- */
-void increase_image(const vector<vector<double> > &small, GBitmap &result, int scale) {
-    int width = result.columns(), height = result.rows();
-
-    //corners
-    for (int i = 0; i < scale / 2; ++i) {
-        for (int j = 0; j < scale / 2; ++j) {
-            result[i][j] = static_cast<int>(small[0][0]);
-            result[height - i - 1][j] = static_cast<int>(small.back()[0]);
-            result[i][width - j - 1] = static_cast<int>(small[0].back());
-            result[height - i - 1][width - j - 1] = static_cast<int>(small.back().back());
-        }
-    }
-
-    //left and right borders
-    for (int i = 0; i < height - scale; ++i) {
-        {
-            double top_val = small[i / scale][0];
-            double bottom_val = small[i / scale + 1][0];
-            int pos = i % scale;
-            for (int j = 0; j < scale / 2; ++j) {
-                result[i + scale / 2][j] = static_cast<int>((bottom_val * pos + top_val * (scale - pos)) / scale);
-            }
-        }
-        {
-            double top_val = small[i / scale].back();
-            double bottom_val = small[i / scale + 1].back();
-            int pos = i % scale;
-            for (int j = width - scale / 2; j < width; ++j) {
-                result[i + scale / 2][j] = static_cast<int>((bottom_val * pos + top_val * (scale - pos)) / scale);
-            }
-        }
-    }
-
-    //top and bottom borders
-    for (int j = 0; j < width - scale; ++j) {
-        {
-            double left_val = small[0][j / scale];
-            double right_val = small[0][j / scale + 1];
-            std::swap(left_val, right_val); //WTF?!?!?! why does it work?
-            int pos = j % scale;
-            for (int i = 0; i < scale / 2; ++i) {
-                result[i][j + scale / 2] = static_cast<int>((left_val * pos + right_val * (scale - pos)) / scale);
-            }
-        }
-        {
-            double left_val = small.back()[j / scale];
-            double right_val = small.back()[j / scale + 1];
-            std::swap(left_val, right_val);
-            int pos = j % scale;
-            for (int i = height - scale / 2; i < height; ++i) {
-                result[i][j + scale / 2] = static_cast<int>((left_val * pos + right_val * (scale - pos)) / scale);
-            }
-        }
-    }
-    for (int i = 0; i < height - scale; ++i) {
-        for (int j = 0; j < width - scale; ++j) {
-            int vpos = i % scale, hpos = j % scale;
-            /*
-             * a_b
-             * |/|
-             * c-a
-             *
-             * f(x, y) = A*x + B*y + C
-             * f(1, 0) = b
-             * f(0,1) = c
-             *
-             * (1, 1) = (scale - 1, scale - 1)
-             */
-            double A, B, C;
-            double a, b, c;
-            b = small[i / scale][j / scale + 1];
-            c = small[i / scale + 1][j / scale];
-            if (vpos*(scale - 1) + hpos*(scale - 1) < (scale - 1)*(scale - 1)) {//top left triangle
-                a = small[i / scale][j / scale];
-                C = a;
-                A = b - a;
-                B = c - a;
-            }
-            else {//bottom right triangle
-                a = small[i / scale + 1][j / scale + 1];
-                C = c + b - a;
-                A = a - c;
-                B = a - b;
-            }
-            result[i + scale / 2][j + scale / 2] = static_cast<int>((A*hpos*(scale-1) + B*vpos*(scale-1) + C*(scale-1)*(scale-1)) / ((scale-1)*(scale-1)));
-        }
-    }
-}
-
 void get_image_parts(const GBitmap &image, GBitmap &black_result, GBitmap &white_result, int cell_size, int back_scale) {
     int width = image.columns(), height = image.rows();
     int v_cells = height / cell_size + (height % cell_size ? 1 : 0), h_cells = width / cell_size + (width % cell_size ? 1 : 0);
@@ -187,11 +95,17 @@ void get_image_parts(const GBitmap &image, GBitmap &black_result, GBitmap &white
         white = make_step(white_q, white, true, eps_step);
     }
 
-    black_result.init(v_cells * back_scale, h_cells * back_scale);
+    black_result.init(v_cells, h_cells);
     black_result.set_grays(256);
-    increase_image(black, black_result, back_scale);
-
-    white_result.init(v_cells * back_scale, h_cells * back_scale);
+    white_result.init(v_cells, h_cells);
     white_result.set_grays(256);
-    increase_image(white, white_result, back_scale);
+    for (int i = 0; i < v_cells; ++i) {
+        for (int j = 0; j < h_cells; ++j) {
+            black_result[i][j] = static_cast<byte> (black[i][j]);
+            white_result[i][j] = static_cast<byte> (white[i][j]);
+        }
+    }
+    //increase_image(black, black_result, back_scale);
+
+    //increase_image(white, white_result, back_scale);
 }

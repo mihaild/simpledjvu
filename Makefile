@@ -4,7 +4,7 @@ INCLUDES=-I$(DJVULIBRE_PATH) -I$(DJVULIBRE_PATH)/libdjvu -I$(DJVULIBRE_PATH)/too
 CXXFLAGS=$(INCLUDES) -DHAVE_CONFIG_H -pthread -DTHREADMODEL=POSIXTHREADS
 LINK=g++ -O3
 
-BIN_FILES = create_djvu select_threshold_level
+BIN_FILES = create_djvu
 
 all: $(BIN_FILES)
 
