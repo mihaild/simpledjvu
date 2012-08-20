@@ -1,6 +1,9 @@
 #include <iostream>
+#include <vector>
+#include <array>
 
 using std::cout;
+using std::vector;
 
 #include "djvulibre.h"
 
@@ -62,9 +65,65 @@ GP<GBitmap> get_norm_image(const GBitmap &image) {
     return gresult;
 }
 
+enum Chunk { BACKGROUND, FOREGROUND};
+
+GP<GBitmap> make_chunk_mask(const GBitmap &mask, Chunk chunk) {
+    GP<GBitmap> result = GBitmap::create(mask.rows(), mask.columns());
+    result->set_grays(2);
+    int ok_color = chunk == BACKGROUND;
+    for (int i = 0; i < mask.rows(); ++i) {
+        for (int j = 0; j < mask.columns(); ++j) {
+            (*result)[i][j] = mask[i][j] == ok_color ||
+                (i > 0 && mask[i-1][j] == ok_color) ||
+                (i < mask.rows() - 1 && mask[i+1][j] == ok_color) ||
+                (j > 0 && mask[i][j-1] == ok_color) ||
+                (j < mask.columns() - 1 && mask[i][j+1] == ok_color);
+        }
+    }
+    return result;
+}
+
+/*
+ * random parts from c44 tool source code
+ * random mix of references and pointers, just like in main djvulibre code
+ *
+ * @todo: understand, how does it work
+ */
+void write_part_to_djvu(const GBitmap &image, const GP<GBitmap> &gmask, IFFByteStream &iff, Chunk chunk) {
+    GP<IW44Image> iw = IW44Image::create_encode(image, gmask);
+    vector<IWEncoderParms> parms;
+    if (chunk == BACKGROUND) {
+        const array<int, 3> slices = {74, 89, 99}; // random numbers
+        parms.resize(3);
+        for (int i = 0; i < 3; ++i) {
+            parms[i].slices = slices[i];
+            // is it necessary?
+            parms[i].bytes = 0;
+            parms[i].decibels = 0;
+        }
+    }
+    else {
+        parms.resize(1);
+        parms[0].slices = 74; // random number
+        parms[0].bytes = 0;
+        parms[0].decibels = 0;
+    }
+
+    for (const auto& parm : parms) {
+        if (chunk == BACKGROUND) {
+            iff.put_chunk("BG44");
+        }
+        else {
+            iff.put_chunk("FG44");
+        }
+        iw->encode_chunk(iff.get_bytestream(), parm);
+        iff.close_chunk();
+    }
+}
+
 int main(int argc, char *argv[]) {
-    GP<GBitmap> gsource = GBitmap::create(*ByteStream::create(GURL::Filename::UTF8(argv[1]), "rb"));
-    GBitmap &image = *gsource;
+    GP<GBitmap> gimage = GBitmap::create(*ByteStream::create(GURL::Filename::UTF8(argv[1]), "rb"));
+    GBitmap &image = *gimage;
 
     GP<GBitmap> gblack_small = GBitmap::create();
     GBitmap &black_small = *gblack_small;
@@ -91,24 +150,12 @@ int main(int argc, char *argv[]) {
     //rescale_bitmap(*get_norm_image(image), *gnormalized);
     GP<GBitmap> gnormalized = GBitmap::create(image.rows() * 2, image.columns() * 2);
     rescale_bitmap(*gnormalized_small, *gnormalized);
-    gnormalized->binarize_grays(get_threshold_level(*gnormalized));
+
+    int threshold_level = get_threshold_level(*gnormalized);
+
+    gnormalized->binarize_grays(threshold_level);
 
     GP<JB2Image> gmask = pbm2jb2(gnormalized, 1);
-
-
-    /*GP<GBitmap> gblack_real = GBitmap::create(image.rows() / 12, image.columns() / 12);
-    GP<GBitmap> gwhite_real = GBitmap::create(image.rows() / 12, image.columns() / 12);*/
-    GP<GBitmap> gblack_real = GBitmap::create(image.rows() / 6, image.columns() / 6);
-    GP<GBitmap> gwhite_real = GBitmap::create(image.rows() / 6, image.columns() / 6);
-    rescale_bitmap(black_small, *gblack_real);
-    rescale_bitmap(white_small, *gwhite_real);
-
-    //GP<GBitmap> tmp = GBitmap::create();
-    /*get_image_parts(image, *gblack_real, *tmp, 12);
-    get_image_parts(image, *tmp, *gwhite_real, 6);*/
-
-    GP<IW44Image> bg = IW44Image::create_encode(*gwhite_real);
-    GP<IW44Image> fg = IW44Image::create_encode(*gblack_real);
 
     /*
      * this code is based on djvumake and c44 tools source
@@ -130,10 +177,10 @@ int main(int argc, char *argv[]) {
     gmask->encode(iff.get_bytestream());
     iff.close_chunk();
 
-    //save(*gnormalized, argv[2], false);
-    /*GBitmap &result = *gresult;
-    result.save_pgm(*ByteStream::create(GURL::Filename::UTF8(argv[2]), "wb"));*/
+    gnormalized_small->binarize_grays(threshold_level);
 
+    write_part_to_djvu(image, make_chunk_mask(*gnormalized_small, FOREGROUND), iff, FOREGROUND);
+    write_part_to_djvu(image, make_chunk_mask(*gnormalized_small, BACKGROUND), iff, BACKGROUND);
 
     return 0;
 }
