@@ -61,7 +61,11 @@ vector<vector<double> > make_step(const GBitmap &q, const vector<vector<double> 
     return result;
 }
 
-void get_image_parts(const GBitmap &image, GBitmap &black_result, GBitmap &white_result, int cell_size, int back_scale) {
+/*
+ * @todo: different scales for black and white
+ * @todo: calculate in one step, using b(x) = min_y bq(y) + eps*dist(x, y)
+ */
+void get_image_parts(const GBitmap &image, GBitmap &black_result, GBitmap &white_result, int cell_size) {
     int width = image.columns(), height = image.rows();
     int v_cells = height / cell_size + (height % cell_size ? 1 : 0), h_cells = width / cell_size + (width % cell_size ? 1 : 0);
     GP<GBitmap> gblack_q = GBitmap::create(v_cells, h_cells);

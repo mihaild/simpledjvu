@@ -13,4 +13,4 @@ const double QUANTILE = 0.05;
  */
 void increase_image(const vector<vector<double> > &small, GBitmap &result, int scale);
 
-void get_image_parts(const GBitmap &image, GBitmap &black_result, GBitmap &white_result, int cell_size = CELL_SIZE, int back_scale = CELL_SIZE);
+void get_image_parts(const GBitmap &image, GBitmap &black_result, GBitmap &white_result, int cell_size = CELL_SIZE);

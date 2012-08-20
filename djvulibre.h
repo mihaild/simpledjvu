@@ -16,3 +16,4 @@
 #include "JB2Image.h"
 #include "jb2tune.h"
 #include "GScaler.h"
+#include "IW44Image.h"
