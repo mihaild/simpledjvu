@@ -48,7 +48,7 @@ GP<GBitmap> get_norm_image(const GBitmap &image) {
     GBitmap &white_small = *gwhite_small;
 
     get_image_parts(image, black_small, white_small, CELL_SIZE);
-    
+
     GP<GBitmap> gblack = GBitmap::create(image.rows(), image.columns());
     GBitmap &black = *gblack;
     GP<GBitmap> gwhite = GBitmap::create(image.rows(), image.columns());
@@ -94,8 +94,8 @@ void write_part_to_djvu(const GBitmap &image, const GP<GBitmap> &gmask, IFFByteS
     vector<IWEncoderParms> parms;
     if (chunk == BACKGROUND) {
         const array<int, 3> slices = {74, 89, 99}; // random numbers
-        parms.resize(3);
-        for (int i = 0; i < 3; ++i) {
+        parms.resize(2);
+        for (int i = 0; i < 2; ++i) {
             parms[i].slices = slices[i];
             // is it necessary?
             parms[i].bytes = 0;
@@ -104,7 +104,7 @@ void write_part_to_djvu(const GBitmap &image, const GP<GBitmap> &gmask, IFFByteS
     }
     else {
         parms.resize(1);
-        parms[0].slices = 74; // random number
+        parms[0].slices = 89; // random number
         parms[0].bytes = 0;
         parms[0].decibels = 0;
     }
@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
     GBitmap &white_small = *gwhite_small;
 
     get_image_parts(image, black_small, white_small, CELL_SIZE);
-    
+
     GP<GBitmap> gblack = GBitmap::create(image.rows(), image.columns());
     GBitmap &black = *gblack;
     GP<GBitmap> gwhite = GBitmap::create(image.rows(), image.columns());
@@ -151,6 +151,8 @@ int main(int argc, char *argv[]) {
     GP<GBitmap> gnormalized = GBitmap::create(image.rows() * 2, image.columns() * 2);
     rescale_bitmap(*gnormalized_small, *gnormalized);
 
+    save(*gnormalized, "norm.pgm");
+
     int threshold_level = get_threshold_level(*gnormalized);
 
     gnormalized->binarize_grays(threshold_level);
@@ -164,7 +166,7 @@ int main(int argc, char *argv[]) {
     IFFByteStream &iff = *giff;
     iff.put_chunk("FORM:DJVU", 1);
 
-    GP<DjVuInfo> ginfo=DjVuInfo::create();
+    GP<DjVuInfo> ginfo = DjVuInfo::create();
     ginfo->width = gmask->get_width();
     ginfo->height = gmask->get_height();
     ginfo->dpi = 300;

@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <algorithm>
+#include <vector>
 
 #include "djvulibre.h"
 

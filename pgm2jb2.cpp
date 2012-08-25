@@ -1,3 +1,4 @@
+#include <iostream>
 //C-  -*- C++ -*-
 //C- -------------------------------------------------------------------
 //C- DjVuLibre-3.5
@@ -217,7 +218,8 @@ CCImage::init(int w, int h, int dpi)
     dpi = MAX(200, MIN(900, dpi));
     largesize = MIN( 500, MAX(64, dpi));
     smallsize = MAX(2, dpi/150);
-    tinysize = MAX(0, dpi*dpi/20000 - 1);
+    tinysize = MAX(0, dpi*dpi/20000 - 1) * 2;
+    std::cerr << "tiny: " << tinysize << '\n';
 }
 
 
