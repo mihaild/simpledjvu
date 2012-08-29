@@ -7,25 +7,9 @@ using std::vector;
 
 #include "djvulibre.h"
 
-#include "hystogram_splitter.h"
 #include "normalize.h"
 #include "select_threshold_level.h"
 #include "pgm2jb2.h"
-
-/*
- * example from http://www.djvuzone.org/open/doc/GBitmapScaler.html
- */
-void rescale_bitmap(const GBitmap &in, GBitmap &out)
-{
-    int w = in.columns();       // Get input width
-    int h = in.rows();          // Get output width
-    int nw = out.columns();
-    int nh = out.rows();
-    GP<GBitmapScaler> gscaler = GBitmapScaler::create(w,h,nw,nh);  // Creates bitmap scaler
-    GRect desired(0,0,nw,nh);   // Desired output = complete bitmap
-    GRect provided(0,0,w,h);    // Provided input = complete bitmap
-    gscaler->scale(provided, in, desired, out);  // Rescale
-}
 
 /*
  * it should be const GBitmap, but for unknown reason GBitmap::save_pgm is not declared as const
@@ -39,32 +23,6 @@ void save(GBitmap &image, const char *fname, bool pgm = true) {
     }
 }
 
-GP<GBitmap> get_norm_image(const GBitmap &image) {
-    GP<GBitmap> gresult = GBitmap::create();
-
-    GP<GBitmap> gblack_small = GBitmap::create();
-    GBitmap &black_small = *gblack_small;
-    GP<GBitmap> gwhite_small = GBitmap::create();
-    GBitmap &white_small = *gwhite_small;
-
-    get_image_parts(image, black_small, white_small, CELL_SIZE);
-
-    GP<GBitmap> gblack = GBitmap::create(image.rows(), image.columns());
-    GBitmap &black = *gblack;
-    GP<GBitmap> gwhite = GBitmap::create(image.rows(), image.columns());
-    GBitmap &white = *gwhite;
-
-    rescale_bitmap(black_small, black);
-    rescale_bitmap(white_small, white);
-
-    /*save(black, "black.pgm");
-    save(white, "white.pgm");*/
-
-    normalize(image, black, white, *gresult);
-
-    return gresult;
-}
-
 enum Chunk { BACKGROUND, FOREGROUND};
 
 GP<GBitmap> make_chunk_mask(const GBitmap &mask, Chunk chunk) {
@@ -73,11 +31,11 @@ GP<GBitmap> make_chunk_mask(const GBitmap &mask, Chunk chunk) {
     int ok_color = chunk == BACKGROUND;
     for (int i = 0; i < mask.rows(); ++i) {
         for (int j = 0; j < mask.columns(); ++j) {
-            (*result)[i][j] = mask[i][j] == ok_color ||
+            (*result)[i][j] = mask[i][j] == ok_color/* ||
                 (i > 0 && mask[i-1][j] == ok_color) ||
                 (i < mask.rows() - 1 && mask[i+1][j] == ok_color) ||
                 (j > 0 && mask[i][j-1] == ok_color) ||
-                (j < mask.columns() - 1 && mask[i][j+1] == ok_color);
+                (j < mask.columns() - 1 && mask[i][j+1] == ok_color)*/;
         }
     }
     return result;
@@ -123,32 +81,10 @@ void write_part_to_djvu(const GBitmap &image, const GP<GBitmap> &gmask, IFFByteS
 
 int main(int argc, char *argv[]) {
     GP<GBitmap> gimage = GBitmap::create(*ByteStream::create(GURL::Filename::UTF8(argv[1]), "rb"));
-    GBitmap &image = *gimage;
 
-    GP<GBitmap> gblack_small = GBitmap::create();
-    GBitmap &black_small = *gblack_small;
-    GP<GBitmap> gwhite_small = GBitmap::create();
-    GBitmap &white_small = *gwhite_small;
+    GP<GBitmap> gnormalized_small = get_norm_image(*gimage);
 
-    get_image_parts(image, black_small, white_small, CELL_SIZE);
-
-    GP<GBitmap> gblack = GBitmap::create(image.rows(), image.columns());
-    GBitmap &black = *gblack;
-    GP<GBitmap> gwhite = GBitmap::create(image.rows(), image.columns());
-    GBitmap &white = *gwhite;
-
-    rescale_bitmap(black_small, black);
-    rescale_bitmap(white_small, white);
-
-    /*save(black, "black.pgm");
-    save(white, "white.pgm");*/
-
-    GP<GBitmap> gnormalized_small = GBitmap::create(image.rows(), image.columns());
-
-    normalize(image, black, white, *gnormalized_small);
-
-    //rescale_bitmap(*get_norm_image(image), *gnormalized);
-    GP<GBitmap> gnormalized = GBitmap::create(image.rows() * 2, image.columns() * 2);
+    GP<GBitmap> gnormalized = GBitmap::create(gimage->rows() * 2, gimage->columns() * 2);
     rescale_bitmap(*gnormalized_small, *gnormalized);
 
     save(*gnormalized, "norm.pgm");
@@ -181,8 +117,8 @@ int main(int argc, char *argv[]) {
 
     gnormalized_small->binarize_grays(threshold_level);
 
-    write_part_to_djvu(image, make_chunk_mask(*gnormalized_small, FOREGROUND), iff, FOREGROUND);
-    write_part_to_djvu(image, make_chunk_mask(*gnormalized_small, BACKGROUND), iff, BACKGROUND);
+    write_part_to_djvu(*gimage, make_chunk_mask(*gnormalized_small, FOREGROUND), iff, FOREGROUND);
+    write_part_to_djvu(*gimage, make_chunk_mask(*gnormalized_small, BACKGROUND), iff, BACKGROUND);
 
     return 0;
 }

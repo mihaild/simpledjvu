@@ -9,4 +9,5 @@ const int CANONICAL_WHITE_LEVEL = 30;*/
 const int CANONICAL_BLACK_LEVEL = 255;
 const int CANONICAL_WHITE_LEVEL = 0;
 
-void normalize(const GBitmap &image, const GBitmap &black, const GBitmap &white, GBitmap &result);
+GP<GBitmap> get_norm_image(const GBitmap &image);
+void rescale_bitmap(const GBitmap &in, GBitmap &out);
