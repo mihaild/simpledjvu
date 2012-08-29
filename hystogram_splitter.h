@@ -4,9 +4,11 @@ using std::vector;
 
 #include "djvulibre.h"
 
-const int CELL_SIZE = 20;
+const int CELL_SIZE = 25;
 
 const double QUANTILE = 0.05;
+
+const int MIN_COLORS_DIFF = 10;
 
 /*
  * fails if small.size > result.size/scale

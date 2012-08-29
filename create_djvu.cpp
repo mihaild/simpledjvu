@@ -31,11 +31,11 @@ GP<GBitmap> make_chunk_mask(const GBitmap &mask, Chunk chunk) {
     int ok_color = chunk == BACKGROUND;
     for (int i = 0; i < mask.rows(); ++i) {
         for (int j = 0; j < mask.columns(); ++j) {
-            (*result)[i][j] = mask[i][j] == ok_color/* ||
+            (*result)[i][j] = mask[i][j] == ok_color ||
                 (i > 0 && mask[i-1][j] == ok_color) ||
                 (i < mask.rows() - 1 && mask[i+1][j] == ok_color) ||
                 (j > 0 && mask[i][j-1] == ok_color) ||
-                (j < mask.columns() - 1 && mask[i][j+1] == ok_color)*/;
+                (j < mask.columns() - 1 && mask[i][j+1] == ok_color);
         }
     }
     return result;

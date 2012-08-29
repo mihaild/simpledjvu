@@ -149,6 +149,15 @@ void get_image_parts(const GBitmap &image, GBitmap &black_result, GBitmap &white
         for (int j = 0; j < h_cells; ++j) {
             black_result[i][j] = static_cast<byte> (black[i][j]);
             white_result[i][j] = static_cast<byte> (white[i][j]);
+            if (black_result[i][j] - white_result[i][j] < MIN_COLORS_DIFF) {
+                if (black_result[i][j] > 255 - MIN_COLORS_DIFF) {
+                    white_result[i][j] -= 255 - black_result[i][j];
+                    black_result[i][j] = 255;
+                }
+                else {
+                    black_result[i][j] += MIN_COLORS_DIFF;
+                }
+            }
         }
     }
 }

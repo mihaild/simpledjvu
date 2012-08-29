@@ -15,18 +15,12 @@
  */
 byte canonize_level(const byte raw, const byte black, const byte white) {
     if (raw >= black) {
-        if (black == COLORS_COUNT - 1) {
-            return CANONICAL_BLACK_LEVEL;
-        }
-        return (COLORS_COUNT - 1 - CANONICAL_BLACK_LEVEL) * (raw - black) / (COLORS_COUNT - 1 - black) + CANONICAL_BLACK_LEVEL;
+        return CANONICAL_BLACK_LEVEL;
     }
     if (raw <= white) {
-        if (white == 0) {
-            return CANONICAL_WHITE_LEVEL;
-        }
-        return CANONICAL_WHITE_LEVEL * raw / white;
+        return CANONICAL_WHITE_LEVEL;
     }
-    return CANONICAL_WHITE_LEVEL + (raw - white) * (CANONICAL_BLACK_LEVEL - CANONICAL_WHITE_LEVEL) / (black - white);
+    return (raw - white) * (CANONICAL_BLACK_LEVEL - CANONICAL_WHITE_LEVEL) / (black - white);
 }
 
 void normalize_parts(const GBitmap &image, const GBitmap &black, const GBitmap &white, GBitmap &result) {
@@ -71,7 +65,7 @@ namespace {
 GP<GBitmap> get_norm_image(const GBitmap &image) {
     GP<GBitmap> current = GBitmap::create(image);
     GP<GBitmap> next = GBitmap::create();
-    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 200; ++i) {
         std::cout << i << '\n';
         GP<GBitmap> gblack_small = GBitmap::create();
         GBitmap &black_small = *gblack_small;
