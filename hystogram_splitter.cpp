@@ -2,6 +2,10 @@
 #include <cmath>
 #include <algorithm>
 #include <vector>
+#include <iostream>
+
+using std::min;
+using std::max;
 
 #include "djvulibre.h"
 
@@ -63,8 +67,47 @@ vector<vector<double> > make_step(const GBitmap &q, const vector<vector<double> 
 }
 
 /*
+ * get = min and eps < 0, or get = max and eps > 0
+ * otherwise it destroys the Earth
+ */
+template<const double& (*get)(const double &, const double &)> void get_values(const GBitmap &q, const double eps_step, vector<vector<double> > *result) {
+    vector<vector<double> > row_val(q.rows(), vector<double> (q.columns()));
+    {
+        vector<vector<double> > left_val(q.rows(), vector<double> (q.columns())), right_val(q.rows(), vector<double> (q.columns()));
+        for (int i = 0; i < q.rows(); ++i) {
+            left_val[i][0] = q[i][0];
+            for (int j = 1; j < q.columns(); ++j) {
+                left_val[i][j] = get(left_val[i][j-1] + eps_step, static_cast<double>(q[i][j]));
+            }
+            right_val[i].back() = q[i][q.columns() - 1];
+            for (int j = q.columns() - 2; j >= 0; --j) {
+                right_val[i][j] = get(right_val[i][j+1] + eps_step, static_cast<double>(q[i][j]));
+            }
+            for (int j = 0; j < q.columns(); ++j) {
+                row_val[i][j] = get(left_val[i][j], right_val[i][j]);
+            }
+        }
+    }
+    vector<vector<double> > up_val(q.rows(), vector<double> (q.columns())), down_val(q.rows(), vector<double> (q.columns()));
+    for (int j = 0; j < q.columns(); ++j) {
+        up_val[0][j] = row_val[0][j];
+        for (int i = 1; i < q.rows(); ++i) {
+            up_val[i][j] = get(row_val[i][j], up_val[i-1][j] + eps_step);
+        }
+        down_val.back()[j] = row_val.back()[j];
+        for (int i = q.rows() - 2; i >= 0; --i) {
+            down_val[i][j] = get(row_val[i][j], up_val[i+1][j] + eps_step);
+        }
+    }
+    for (int i = 0; i < q.rows(); ++i) {
+        for (int j = 0; j < q.columns(); ++j) {
+            (*result)[i][j] = get(up_val[i][j], down_val[i][j]);
+        }
+    }
+}
+
+/*
  * @todo: different scales for black and white
- * @todo: calculate in one step, using b(x) = min_y bq(y) + eps*dist(x, y)
  */
 void get_image_parts(const GBitmap &image, GBitmap &black_result, GBitmap &white_result, int cell_size) {
     int width = image.columns(), height = image.rows();
@@ -93,12 +136,10 @@ void get_image_parts(const GBitmap &image, GBitmap &black_result, GBitmap &white
     vector<vector<double> > black(v_cells, vector<double> (h_cells, 255));
     vector<vector<double> > white(v_cells, vector<double> (h_cells, 0));
 
-    double eps_step = 255.0 / std::max(v_cells, h_cells) / 10.0;
-    int rounds = 255.0 / eps_step + 1;
-    for (int round = 0; round < rounds; ++round) {
-        black = make_step(black_q, black, false, eps_step);
-        white = make_step(white_q, white, true, eps_step);
-    }
+    double eps_step = 255.0 / std::max(v_cells, h_cells) / 2.0;
+
+    get_values<max> (black_q, -eps_step, &black);
+    get_values<min> (white_q, eps_step, &white);
 
     black_result.init(v_cells, h_cells);
     black_result.set_grays(256);
@@ -110,7 +151,4 @@ void get_image_parts(const GBitmap &image, GBitmap &black_result, GBitmap &white
             white_result[i][j] = static_cast<byte> (white[i][j]);
         }
     }
-    //increase_image(black, black_result, back_scale);
-
-    //increase_image(white, white_result, back_scale);
 }

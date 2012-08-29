@@ -57,6 +57,17 @@ void rescale_bitmap(const GBitmap &in, GBitmap &out)
     gscaler->scale(provided, in, desired, out);  // Rescale
 }
 
+namespace {
+    void save(GBitmap &image, const char *fname, bool pgm = true) {
+        if (pgm) {
+            image.save_pgm(*ByteStream::create(GURL::Filename::UTF8(fname), "wb"));
+        }
+        else {
+            image.save_pbm(*ByteStream::create(GURL::Filename::UTF8(fname), "wb"));
+        }
+    }
+}
+
 GP<GBitmap> get_norm_image(const GBitmap &image) {
     GP<GBitmap> current = GBitmap::create(image);
     GP<GBitmap> next = GBitmap::create();
@@ -68,6 +79,9 @@ GP<GBitmap> get_norm_image(const GBitmap &image) {
         GBitmap &white_small = *gwhite_small;
 
         get_image_parts(*current, black_small, white_small, CELL_SIZE);
+
+        save(black_small, "black.pgm");
+        save(white_small, "white.pgm");
 
         GP<GBitmap> gblack = GBitmap::create(image.rows(), image.columns());
         GBitmap &black = *gblack;
@@ -82,5 +96,5 @@ GP<GBitmap> get_norm_image(const GBitmap &image) {
         std::swap(current, next);
     }
 
-    return next;
+    return current;
 }
