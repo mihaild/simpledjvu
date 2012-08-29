@@ -14,6 +14,9 @@ all: $(BIN_FILES)
 create_djvu: build/create_djvu.o build/hystogram_splitter.o build/normalize.o build/select_threshold_level.o build/pgm2jb2.o build/jb2tune.o jb2cmp/libjb2cmp.a
 	$(LINK) -o create_djvu $^ -DHAVE_CONFIG_H -ldjvulibre
 
+get_pgm_diff: build/get_pgm_diff.o
+	$(LINK) -o get_pgm_diff $^ -DHAVE_CONFIG_H -ldjvulibre
+
 build/%.o build/%.d: %.cpp
 	$(CC) $(CXXFLAGS) -c -o build/$*.o $*.cpp
 
