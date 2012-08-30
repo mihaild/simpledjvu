@@ -1,25 +1,47 @@
-#include <iostream>
+/*
+ * Simpledjvu-0.1
+ * Based on djvulibre (http://djvu.sourceforge.net/)
+ * Copyright 2012, Mikhail Dektyarev <mihail.dektyarow@gmail.com>
+ *
+ * This file is part of Simpledjvu.
+ * 
+ * Simpledjvu is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Foobar is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Simpledjvu.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+#include <djvulibre.h>
+
+#include <normalize.h>
+#include <pgm2jb2.h>
+
 #include <vector>
 #include <array>
 
-using std::cout;
 using std::vector;
+using std::array;
 
-#include "djvulibre.h"
-
-#include "normalize.h"
-#include "select_threshold_level.h"
-#include "pgm2jb2.h"
+const byte THRESHOLD_LEVEL = 128;
 
 /*
  * it should be const GBitmap, but for unknown reason GBitmap::save_pgm is not declared as const
  */
-void save(GBitmap &image, const char *fname, bool pgm = true) {
+void save(const GP<GBitmap> gimage, const char *fname, bool pgm = true) {
     if (pgm) {
-        image.save_pgm(*ByteStream::create(GURL::Filename::UTF8(fname), "wb"));
+        gimage->save_pgm(*ByteStream::create(GURL::Filename::UTF8(fname), "wb"));
     }
     else {
-        image.save_pbm(*ByteStream::create(GURL::Filename::UTF8(fname), "wb"));
+        gimage->save_pbm(*ByteStream::create(GURL::Filename::UTF8(fname), "wb"));
     }
 }
 
@@ -51,9 +73,9 @@ void write_part_to_djvu(const GBitmap &image, const GP<GBitmap> &gmask, IFFByteS
     GP<IW44Image> iw = IW44Image::create_encode(image, gmask);
     vector<IWEncoderParms> parms;
     if (chunk == BACKGROUND) {
-        const array<int, 3> slices = {74, 89, 99}; // random numbers
+        const array<int, 3> slices = {74, 89, 99}; //  random numbers
         parms.resize(2);
-        for (int i = 0; i < 2; ++i) {
+        for (int i = 0; i < parms.size(); ++i) {
             parms[i].slices = slices[i];
             // is it necessary?
             parms[i].bytes = 0;
@@ -87,11 +109,7 @@ int main(int argc, char *argv[]) {
     GP<GBitmap> gnormalized = GBitmap::create(gimage->rows() * 2, gimage->columns() * 2);
     rescale_bitmap(*gnormalized_small, *gnormalized);
 
-    save(*gnormalized, "norm.pgm");
-
-    int threshold_level = get_threshold_level(*gnormalized);
-
-    gnormalized->binarize_grays(threshold_level);
+    gnormalized->binarize_grays(THRESHOLD_LEVEL);
 
     GP<JB2Image> gmask = pbm2jb2(gnormalized, 1);
 
@@ -115,7 +133,7 @@ int main(int argc, char *argv[]) {
     gmask->encode(iff.get_bytestream());
     iff.close_chunk();
 
-    gnormalized_small->binarize_grays(threshold_level);
+    gnormalized_small->binarize_grays(THRESHOLD_LEVEL);
 
     write_part_to_djvu(*gimage, make_chunk_mask(*gnormalized_small, FOREGROUND), iff, FOREGROUND);
     write_part_to_djvu(*gimage, make_chunk_mask(*gnormalized_small, BACKGROUND), iff, BACKGROUND);

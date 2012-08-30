@@ -1,21 +1,47 @@
+/*
+ * Simpledjvu-0.1
+ * Based on djvulibre (http://djvu.sourceforge.net/)
+ * Copyright 2012, Mikhail Dektyarev <mihail.dektyarow@gmail.com>
+ *
+ * This file is part of Simpledjvu.
+ * 
+ * Simpledjvu is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Foobar is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Simpledjvu.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+#include <djvulibre.h>
+
+#include <types.h>
+#include <hystogram_splitter.h>
+
 #include <cstdlib>
 #include <cmath>
 #include <algorithm>
 #include <vector>
-#include <iostream>
+#include <array>
 
 using std::min;
 using std::max;
+using std::array;
 
-#include "djvulibre.h"
 
-#include "types.h"
-#include "hystogram_splitter.h"
+typedef array<int, COLORS_COUNT> Hystogram;
 
 byte get_right_quantile(const Hystogram &hystogram, double level) {
     int need = std::accumulate(hystogram.begin(), hystogram.end(), 0) * level;
     int current_sum = 0;
-    for (byte i = hystogram.size() - 1; i >= 0; --i) {
+    for (int i = hystogram.size() - 1; i >= 0; --i) {
         current_sum += hystogram[i];
         if (current_sum >= need) {
             return i;
@@ -28,49 +54,12 @@ byte get_left_quantile(const Hystogram &hystogram, double level) {
     return get_right_quantile(hystogram, 1.0 - level);
 }
 
-vector<vector<double> > make_step(const GBitmap &q, const vector<vector<double> > &image, bool up, double eps_step) {
-    vector<vector<double> > result(image);
-    int width = q.columns(), height = q.rows();
-    int direction = up ? 1 : -1;
-
-    for (int i = 0; i < result.size(); ++i) {
-        for (int j = 0; j < result[i].size(); ++j) {
-            if (direction*(q[i][j] - image[i][j]) > 0) {
-                double n(0), s(0);
-                if (i > 0) {
-                    ++n;
-                    s += image[i-1][j];
-                }
-                if (i < result.size() - 1) {
-                    ++n;
-                    s += image[i+1][j];
-                }
-                if (j > 0) {
-                    ++n;
-                    s += image[i][j-1];
-                }
-                if (j < result[i].size() - 1) {
-                    ++n;
-                    s += image[i][j+1];
-                }
-                double avg = s / n;
-                if (up) {
-                    result[i][j] = (avg + eps_step > q[i][j]) ? q[i][j] : (avg + eps_step);
-                }
-                else {
-                    result[i][j] = (avg - eps_step < q[i][j]) ? q[i][j] : (avg - eps_step);
-                }
-            }
-        }
-    }
-    return result;
-}
-
 /*
  * get = min and eps < 0, or get = max and eps > 0
  * otherwise it destroys the Earth
  */
-template<const double& (*get)(const double &, const double &)> void get_values(const GBitmap &q, const double eps_step, vector<vector<double> > *result) {
+template<const double& (*get)(const double &, const double &)>
+  void get_values(const GBitmap &q, const double eps_step, vector<vector<double> > *result) {
     vector<vector<double> > row_val(q.rows(), vector<double> (q.columns()));
     {
         vector<vector<double> > left_val(q.rows(), vector<double> (q.columns())), right_val(q.rows(), vector<double> (q.columns()));

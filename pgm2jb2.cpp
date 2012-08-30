@@ -1,4 +1,3 @@
-#include <iostream>
 //C-  -*- C++ -*-
 //C- -------------------------------------------------------------------
 //C- DjVuLibre-3.5
@@ -53,6 +52,8 @@
 //C- | TO ANY WARRANTY OF NON-INFRINGEMENT, OR ANY IMPLIED WARRANTY OF
 //C- | MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 //C- +------------------------------------------------------------------
+
+//some parts of original cjb2 tool from djvulibre
 
 #ifdef HAVE_CONFIG_H
 # include "config.h"
@@ -219,7 +220,6 @@ CCImage::init(int w, int h, int dpi)
     largesize = MIN( 500, MAX(64, dpi));
     smallsize = MAX(2, dpi/150);
     tinysize = MAX(0, dpi*dpi/20000 - 1) * 2;
-    std::cerr << "tiny: " << tinysize << '\n';
 }
 
 

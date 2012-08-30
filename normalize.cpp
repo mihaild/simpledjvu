@@ -1,13 +1,36 @@
-#include <stdlib.h>
-#include <stdio.h>
+/*
+ * Simpledjvu-0.1
+ * Based on djvulibre (http://djvu.sourceforge.net/)
+ * Copyright 2012, Mikhail Dektyarev <mihail.dektyarow@gmail.com>
+ *
+ * This file is part of Simpledjvu.
+ * 
+ * Simpledjvu is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Foobar is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Simpledjvu.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 
-#include "djvulibre.h"
+#include <djvulibre.h>
 
-#include "normalize.h"
-#include "types.h"
-#include "hystogram_splitter.h"
-#include <iostream>
+#include <normalize.h>
+#include <types.h>
+#include <hystogram_splitter.h>
 
+#include <algorithm>
+
+// in usual case, we need threshold between white and black
+const byte CANONICAL_BLACK_LEVEL = MAX_COLOR;
+const byte CANONICAL_WHITE_LEVEL = MIN_COLOR;
 
 /*
  * hope, that black > white
@@ -28,7 +51,6 @@ void normalize_parts(const GBitmap &image, const GBitmap &black, const GBitmap &
     result.init(height, width);
     result.set_grays(256);
     int32 i, j;
-    int32 target;
     for (i = 0; i < height; ++i) {
         for (j = 0; j < width; ++j) {
             result[i][j] = canonize_level(image[i][j], black[i][j], white[i][j]);
@@ -39,43 +61,27 @@ void normalize_parts(const GBitmap &image, const GBitmap &black, const GBitmap &
 /*
  * example from http://www.djvuzone.org/open/doc/GBitmapScaler.html
  */
-void rescale_bitmap(const GBitmap &in, GBitmap &out)
-{
+void rescale_bitmap(const GBitmap &in, GBitmap &out) {
     int w = in.columns();       // Get input width
     int h = in.rows();          // Get output width
     int nw = out.columns();
     int nh = out.rows();
-    GP<GBitmapScaler> gscaler = GBitmapScaler::create(w,h,nw,nh);  // Creates bitmap scaler
-    GRect desired(0,0,nw,nh);   // Desired output = complete bitmap
-    GRect provided(0,0,w,h);    // Provided input = complete bitmap
+    GP<GBitmapScaler> gscaler = GBitmapScaler::create(w, h, nw, nh);  // Creates bitmap scaler
+    GRect desired(0, 0, nw, nh);   // Desired output = complete bitmap
+    GRect provided(0, 0, w, h);    // Provided input = complete bitmap
     gscaler->scale(provided, in, desired, out);  // Rescale
-}
-
-namespace {
-    void save(GBitmap &image, const char *fname, bool pgm = true) {
-        if (pgm) {
-            image.save_pgm(*ByteStream::create(GURL::Filename::UTF8(fname), "wb"));
-        }
-        else {
-            image.save_pbm(*ByteStream::create(GURL::Filename::UTF8(fname), "wb"));
-        }
-    }
 }
 
 GP<GBitmap> get_norm_image(const GBitmap &image) {
     GP<GBitmap> current = GBitmap::create(image);
     GP<GBitmap> next = GBitmap::create();
     for (int i = 0; i < 200; ++i) {
-        std::cout << i << '\n';
         GP<GBitmap> gblack_small = GBitmap::create();
         GBitmap &black_small = *gblack_small;
         GP<GBitmap> gwhite_small = GBitmap::create();
         GBitmap &white_small = *gwhite_small;
 
         get_image_parts(*current, black_small, white_small, CELL_SIZE);
-
-        save(black_small, "black.pgm");
-        save(white_small, "white.pgm");
 
         GP<GBitmap> gblack = GBitmap::create(image.rows(), image.columns());
         GBitmap &black = *gblack;
@@ -90,5 +96,5 @@ GP<GBitmap> get_norm_image(const GBitmap &image) {
         std::swap(current, next);
     }
 
-    return current;
+    return next;
 }

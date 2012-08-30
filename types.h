@@ -1,53 +1,33 @@
-#pragma once
+/*
+ * Simpledjvu-0.1
+ * Based on djvulibre (http://djvu.sourceforge.net/)
+ * Copyright 2012, Mikhail Dektyarev <mihail.dektyarow@gmail.com>
+ *
+ * This file is part of Simpledjvu.
+ * 
+ * Simpledjvu is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Foobar is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Simpledjvu.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 
-#include <array>
-#include <vector>
-#include "constants.h"
-
-using std::array;
-using std::vector;
-using std::pair;
+#ifndef TYPES_H_
+#define TYPES_H_
 
 typedef int int32;
 typedef unsigned char byte;
 
-typedef array<int, COLORS_COUNT> Hystogram;
+const int COLORS_COUNT = 256;
+const byte MIN_COLOR = 0;
+const byte MAX_COLOR = COLORS_COUNT - 1;
 
-struct LevelsDistribution {
-    byte background;
-    byte foreground;
-};
-
-typedef vector<vector<LevelsDistribution> > GlobalLevelsDistribution;
-
-typedef pair<int, int> ipair;
-
-typedef vector<vector<bool> > bitonal_image;
-
-typedef vector<vector<byte> > GrayImage;
-
-struct Point {
-    int x, y;
-    Point(int x, int y): x(x), y(y) {
-    }
-    struct Point& operator += (const struct Point &other) {
-        x += other.x;
-        y += other.y;
-        return *this;
-    }
-    struct Point operator + (const struct Point &other) {
-        Point res(*this);
-        res += other;
-        return res;
-    }
-    struct Point& operator -= (const struct Point &other) {
-        x -= other.x;
-        y -= other.y;
-        return *this;
-    }
-    struct Point operator - (const struct Point &other) {
-        Point res(*this);
-        res -= other;
-        return res;
-    }
-};
+#endif  // TYPES_H_

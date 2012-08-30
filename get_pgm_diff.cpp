@@ -1,10 +1,32 @@
+/*
+ * Simpledjvu-0.1
+ * Based on djvulibre (http://djvu.sourceforge.net/)
+ * Copyright 2012, Mikhail Dektyarev <mihail.dektyarow@gmail.com>
+ *
+ * This file is part of Simpledjvu.
+ * 
+ * Simpledjvu is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Foobar is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Simpledjvu.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+#include <djvulibre.h>
+
 #include <iostream>
 #include <cmath>
 #include <vector>
 
 using std::vector;
-
-#include "djvulibre.h"
 
 vector<vector<int> > get_image_diff(const GBitmap &image1, const GBitmap &image2) {
     vector<vector<int> > result(image1.columns(), vector<int> (image1.rows()));
@@ -45,10 +67,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    //std::cout << "Area: " << gimage1->rows() * gimage1->columns() << '\n';
-
     auto diff = get_image_diff(*gimage1, *gimage2);
 
-    std::cout << /*"L1: " <<*/ static_cast<long long int>(Lp_norm(diff, 1.0)) /*<< "; L2:"*/ << "  " << Lp_norm(diff, 2.0) << '\n';
+    std::cout << Lp_norm(diff, 1.0) << "  " << Lp_norm(diff, 2.0) << '\n';
     return 0;
 }
