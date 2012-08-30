@@ -33,7 +33,7 @@ const int CELL_SIZE = 25;
 
 const double QUANTILE = 0.05;
 
-const int MIN_COLORS_DIFF = 10;
+const int MIN_COLORS_DIFF = 50;
 
 void get_image_parts(const GBitmap &image, GBitmap &black_result, GBitmap &white_result, int cell_size = CELL_SIZE);
 

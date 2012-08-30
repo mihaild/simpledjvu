@@ -27,7 +27,7 @@
 
 #include <types.h>
 
-GP<GBitmap> get_norm_image(const GBitmap &image);
+GP<GBitmap> get_norm_image(const GBitmap &image, const int iterations = 20);
 void rescale_bitmap(const GBitmap &in, GBitmap &out);
 
 #endif  // NORMALIZE_H_

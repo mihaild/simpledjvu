@@ -135,8 +135,10 @@ int main(int argc, char *argv[]) {
 
     gnormalized_small->binarize_grays(THRESHOLD_LEVEL);
 
-    write_part_to_djvu(*gimage, make_chunk_mask(*gnormalized_small, FOREGROUND), iff, FOREGROUND);
-    write_part_to_djvu(*gimage, make_chunk_mask(*gnormalized_small, BACKGROUND), iff, BACKGROUND);
+    GP<GBitmap> gbetter_image = get_norm_image(*gimage, 2);
+
+    write_part_to_djvu(*gbetter_image, make_chunk_mask(*gnormalized_small, FOREGROUND), iff, FOREGROUND);
+    write_part_to_djvu(*gbetter_image, make_chunk_mask(*gnormalized_small, BACKGROUND), iff, BACKGROUND);
 
     return 0;
 }

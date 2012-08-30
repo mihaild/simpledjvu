@@ -72,10 +72,10 @@ void rescale_bitmap(const GBitmap &in, GBitmap &out) {
     gscaler->scale(provided, in, desired, out);  // Rescale
 }
 
-GP<GBitmap> get_norm_image(const GBitmap &image) {
+GP<GBitmap> get_norm_image(const GBitmap &image, const int iterations) {
     GP<GBitmap> current = GBitmap::create(image);
     GP<GBitmap> next = GBitmap::create();
-    for (int i = 0; i < 200; ++i) {
+    for (int i = 0; i < iterations; ++i) {
         GP<GBitmap> gblack_small = GBitmap::create();
         GBitmap &black_small = *gblack_small;
         GP<GBitmap> gwhite_small = GBitmap::create();
