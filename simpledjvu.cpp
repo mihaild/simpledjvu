@@ -27,11 +27,40 @@
 
 #include <vector>
 #include <array>
+#include <string>
+
+#include <iostream>
+#include <cstdlib>
 
 using std::vector;
 using std::array;
+using std::string;
 
 const byte THRESHOLD_LEVEL = 128;
+
+struct Keys {
+    bool include_bg;
+    bool include_fg;
+    int mask_mul;
+    bool use_normalized;
+    int normalize_iters;
+    int threshold_level;
+    int cjb2_loss_level;
+    vector<int> slices_bg;
+    vector<int> slices_fg;
+    Keys():
+        include_bg(true),
+        include_fg(true),
+        mask_mul(2),
+        use_normalized(false),
+        normalize_iters(200),
+        threshold_level(128),
+        cjb2_loss_level(1),
+        slices_bg({74, 89, 99}),
+        slices_fg({89}) {
+    }
+
+};
 
 /*
  * it should be const GBitmap, but for unknown reason GBitmap::save_pgm is not declared as const
@@ -63,30 +92,108 @@ GP<GBitmap> make_chunk_mask(const GBitmap &mask, Chunk chunk) {
     return result;
 }
 
+void print_help() {
+    std::cerr
+        << "Usage: simpledjvu [options] input.pgm output.djvu\n"
+        << "where options =\n"
+        << "\t-nobg\n"
+        << "\t-nofg\n"
+        << "\t-mask_mul n\n"
+        << "\t-use_normalized\n"
+        << "\t-normalize_iters n\n"
+        << "\t-threshold_level n\n"
+        << "\t-cjb2_loss_level n\n"
+        << "\t-slices_bg n1,n2,..\n"
+        << "\t-slices_fg n1,n2,...\n"
+    ;
+}
+
+bool parse_keys(int argc, char *argv[], Keys *keys, char **input, char **output) {
+    if (argc <= 2) {
+        std::cerr << "Not enough arguments\n";
+        return false;
+    }
+    (*input) = argv[argc - 2];
+    (*output) = argv[argc - 1];
+    for (int i = 1; i < argc - 2; ++i) {
+        if (argv[i][0] != '-') {
+            std::cerr << "Wrong option format: " << argv[i] << '\n';
+            return false;
+        }
+        string arg = argv[i];
+        if (arg == "-nobg") {
+            keys->include_bg = false;
+        }
+        else if (arg == "-nofg") {
+            keys->include_fg = false;
+        }
+        else if (arg == "-use_normalized") {
+            keys->use_normalized = true;
+        }
+        else if (arg == "-mask_mul" || arg == "-normalize_iters" || arg == "-threshold_level" || arg == "-cjb2_loss_level") {
+            ++i;
+            int n;
+            char *endptr;
+            n = strtol(argv[i], &endptr, 10);
+            if (*endptr) {
+                std::cerr << "Bad number: " << argv[i] << '\n';
+                return false;
+            }
+            if (arg == "-mask_mul") {
+                keys->mask_mul = n;
+            }
+            else if (arg == "-normalize_iters") {
+                keys->normalize_iters = n;
+            }
+            else if (arg == "-threshold_level") {
+                keys->threshold_level = n;
+            }
+            else if (arg == "-cjb2_loss_level") {
+                keys->cjb2_loss_level = n;
+            }
+        }
+        else if (arg == "-slices_bg" || arg == "-slices_fg") {
+            ++i;
+            char *nptr = argv[i], *endptr;
+            vector<int> ns;
+            while (*nptr) {
+                int n = strtol(nptr, &endptr, 10);
+                if (endptr == nptr || *endptr != ',' && *endptr != 0) {
+                    std::cerr << "Bad numbers: " << argv[i] << '\n';
+                    return false;
+                }
+                ns.push_back(n);
+                nptr = *endptr ? endptr + 1 : endptr;
+            }
+            if (arg == "-slices_bg") {
+                keys->slices_bg = ns;
+            }
+            else if (arg == "-slices_fg") {
+                keys->slices_fg = ns;
+            }
+        }
+        else {
+            std::cerr << "Unknown option: " << argv[i] << '\n';
+            return false;
+        }
+    }
+    return true;
+}
+
 /*
  * random parts from c44 tool source code
  * random mix of references and pointers, just like in main djvulibre code
  *
  * @todo: understand, how does it work
  */
-void write_part_to_djvu(const GBitmap &image, const GP<GBitmap> &gmask, IFFByteStream &iff, Chunk chunk) {
+void write_part_to_djvu(const GBitmap &image, const vector<int> &slices, const GP<GBitmap> &gmask, IFFByteStream &iff, Chunk chunk) {
     GP<IW44Image> iw = IW44Image::create_encode(image, gmask);
-    vector<IWEncoderParms> parms;
-    if (chunk == BACKGROUND) {
-        const array<int, 3> slices = {74, 89, 99}; //  random numbers
-        parms.resize(2);
-        for (int i = 0; i < parms.size(); ++i) {
-            parms[i].slices = slices[i];
-            // is it necessary?
-            parms[i].bytes = 0;
-            parms[i].decibels = 0;
-        }
-    }
-    else {
-        parms.resize(1);
-        parms[0].slices = 89; // random number
-        parms[0].bytes = 0;
-        parms[0].decibels = 0;
+    vector<IWEncoderParms> parms(slices.size());
+    for (int i = 0; i < parms.size(); ++i) {
+        parms[i].slices = slices[i];
+        // is it necessary?
+        parms[i].bytes = 0;
+        parms[i].decibels = 0;
     }
 
     for (const auto& parm : parms) {
@@ -102,21 +209,28 @@ void write_part_to_djvu(const GBitmap &image, const GP<GBitmap> &gmask, IFFByteS
 }
 
 int main(int argc, char *argv[]) {
-    GP<GBitmap> gimage = GBitmap::create(*ByteStream::create(GURL::Filename::UTF8(argv[1]), "rb"));
+    Keys keys;
+    char *input, *output;
+    if (!parse_keys(argc, argv, &keys, &input, &output)) {
+        print_help();
+        return 1;
+    }
+
+    GP<GBitmap> gimage = GBitmap::create(*ByteStream::create(GURL::Filename::UTF8(input), "rb"));
 
     GP<GBitmap> gnormalized_small = get_norm_image(*gimage);
 
-    GP<GBitmap> gnormalized = GBitmap::create(gimage->rows() * 2, gimage->columns() * 2);
+    GP<GBitmap> gnormalized = GBitmap::create(gimage->rows() * keys.mask_mul, gimage->columns() * keys.mask_mul);
     rescale_bitmap(*gnormalized_small, *gnormalized);
 
-    gnormalized->binarize_grays(THRESHOLD_LEVEL);
+    gnormalized->binarize_grays(keys.threshold_level);
 
-    GP<JB2Image> gmask = pbm2jb2(gnormalized, 1);
+    GP<JB2Image> gmask = pbm2jb2(gnormalized, keys.cjb2_loss_level);
 
     /*
      * this code is based on djvumake and c44 tools source
      */
-    GP<IFFByteStream> giff = IFFByteStream::create(ByteStream::create(GURL::Filename::UTF8(argv[2]), "wb"));
+    GP<IFFByteStream> giff = IFFByteStream::create(ByteStream::create(GURL::Filename::UTF8(output), "wb"));
     IFFByteStream &iff = *giff;
     iff.put_chunk("FORM:DJVU", 1);
 
@@ -135,10 +249,20 @@ int main(int argc, char *argv[]) {
 
     gnormalized_small->binarize_grays(THRESHOLD_LEVEL);
 
-    GP<GBitmap> gbetter_image = get_norm_image(*gimage, 2);
+    GP<GBitmap> gbetter_image;
+    if (keys.use_normalized) {
+        gbetter_image = get_norm_image(*gimage, 2);
+    }
+    else {
+        gbetter_image = gimage;
+    }
 
-    write_part_to_djvu(*gbetter_image, make_chunk_mask(*gnormalized_small, FOREGROUND), iff, FOREGROUND);
-    write_part_to_djvu(*gbetter_image, make_chunk_mask(*gnormalized_small, BACKGROUND), iff, BACKGROUND);
+    if (keys.include_fg) {
+        write_part_to_djvu(*gbetter_image, keys.slices_fg, make_chunk_mask(*gnormalized_small, FOREGROUND), iff, FOREGROUND);
+    }
+    if (keys.include_bg) {
+        write_part_to_djvu(*gbetter_image, keys.slices_bg, make_chunk_mask(*gnormalized_small, BACKGROUND), iff, BACKGROUND);
+    }
 
     return 0;
 }
