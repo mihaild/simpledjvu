@@ -21,23 +21,23 @@ You need g++ version supports c++0x standard flag.
 
 where options =
 
-    **-nobg** Do not include background in djvu output.
+**-nobg** Do not include background in djvu output.
 
-    **-nofg** Do not include foreground in djvu output.
+**-nofg** Do not include foreground in djvu output.
 
-    **-mask_mul n** Multiplicate mask size n times.
+**-mask_mul n** Multiplicate mask size n times.
 
-    **-use_normalized** Use normalized image (in which "almost black" and "almost white" colors are exactly black and white) for background and foreground except of original.
+**-use_normalized** Use normalized image (in which "almost black" and "almost white" colors are exactly black and white) for background and foreground except of original.
 
-    **-normalize_iters n** Use *n* normalization iterations for mask (see "Algorithm description").
+**-normalize_iters n** Use *n* normalization iterations for mask (see "Algorithm description").
 
-    **-threshold_level n** Use *n* as threshold level for mask (more gives larger mask).
+**-threshold_level n** Use *n* as threshold level for mask (more gives larger mask).
 
-    **-cjb2_loss_level n** Use *n* as cjb2 loss level (see djvulibre cjb2 tool description).
+**-cjb2_loss_level n** Use *n* as cjb2 loss level (see djvulibre cjb2 tool description).
 
-    **-slices_bg n1,n2,..** Use *n1,n2,...* as number of slices for c44 for background (see djvulibre c44 tool description).
+**-slices_bg n1,n2,..** Use *n1,n2,...* as number of slices for c44 for background (see djvulibre c44 tool description).
 
-    **-slices_fg n1,n2,...** Use *n1,n2,...* as number of slices for c44 for foreground.
+**-slices_fg n1,n2,...** Use *n1,n2,...* as number of slices for c44 for foreground.
 
 You can use imagemagick or any other similar tool to obtain pgm from other format.
 
