@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
 
     GP<GBitmap> gimage = GBitmap::create(*ByteStream::create(GURL::Filename::UTF8(input), "rb"));
 
-    GP<GBitmap> gnormalized_small = get_norm_image(*gimage);
+    GP<GBitmap> gnormalized_small = get_norm_image(*gimage, keys.normalize_iters);
 
     GP<GBitmap> gnormalized = GBitmap::create(gimage->rows() * keys.mask_mul, gimage->columns() * keys.mask_mul);
     rescale_bitmap(*gnormalized_small, *gnormalized);
