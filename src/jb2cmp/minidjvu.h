@@ -1,6 +1,6 @@
 /* minidjvu - library for handling bilevel images with DjVuBitonal support
  *
- * classify.h - classifying patterns
+ * no_mdjvu.h - stuff for compiling the pattern matcher outside of minidjvu
  *
  * Copyright (C) 2005  Ilya Mezhirov
  *
@@ -18,11 +18,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * 
+ *
  * minidjvu is derived from DjVuLibre (http://djvu.sourceforge.net)
  * All over DjVuLibre there is a patent alert from LizardTech
  * which I guess I should reproduce (don't ask me what does this mean):
- * 
+ *
  *  ------------------------------------------------------------------
  * | DjVu (r) Reference Library (v. 3.5)
  * | Copyright (c) 1999-2001 LizardTech, Inc. All Rights Reserved.
@@ -38,16 +38,16 @@
  * | The computer code originally released by LizardTech under this
  * | license and unmodified by other parties is deemed "the LIZARDTECH
  * | ORIGINAL CODE."  Subject to any third party intellectual property
- * | claims, LizardTech grants recipient a worldwide, royalty-free, 
- * | non-exclusive license to make, use, sell, or otherwise dispose of 
- * | the LIZARDTECH ORIGINAL CODE or of programs derived from the 
- * | LIZARDTECH ORIGINAL CODE in compliance with the terms of the GNU 
- * | General Public License.   This grant only confers the right to 
- * | infringe patent claims underlying the LIZARDTECH ORIGINAL CODE to 
- * | the extent such infringement is reasonably necessary to enable 
- * | recipient to make, have made, practice, sell, or otherwise dispose 
- * | of the LIZARDTECH ORIGINAL CODE (or portions thereof) and not to 
- * | any greater extent that may be necessary to utilize further 
+ * | claims, LizardTech grants recipient a worldwide, royalty-free,
+ * | non-exclusive license to make, use, sell, or otherwise dispose of
+ * | the LIZARDTECH ORIGINAL CODE or of programs derived from the
+ * | LIZARDTECH ORIGINAL CODE in compliance with the terms of the GNU
+ * | General Public License.   This grant only confers the right to
+ * | infringe patent claims underlying the LIZARDTECH ORIGINAL CODE to
+ * | the extent such infringement is reasonably necessary to enable
+ * | recipient to make, have made, practice, sell, or otherwise dispose
+ * | of the LIZARDTECH ORIGINAL CODE (or portions thereof) and not to
+ * | any greater extent that may be necessary to utilize further
  * | modifications or combinations.
  * |
  * | The LIZARDTECH ORIGINAL CODE is provided "AS IS" WITHOUT WARRANTY
@@ -58,26 +58,18 @@
  */
 
 
-#ifndef MDJVU_CLASSIFY_H
-#define MDJVU_CLASSIFY_H
-
-/* Classifies a set of patterns.
- * result - array of tags ranging from 1 to return value,
- *    and 0 for those cells which were NULL (yes, NULLs are permitted).
- * Every tag has at least one pattern to which it's attached.
- * Equally tagged images are classified equivalent.
+/*
+ * to compile the pattern matcher without the rest of minidjvu,
+ * do this:
+ *
+ *  mv no_mdjvu.h minidjvu.h
+ *  touch mdjvucfg.h
+ *  g++ -c *.cpp
  */
 
-MDJVU_FUNCTION int32 mdjvu_classify_patterns
-    (mdjvu_pattern_t *, int32 *result, int32 n, int32 dpi,
-     mdjvu_matcher_options_t);
-
-#ifndef NO_MINIDJVU
-
-/* Special tag 0 is reserved for bitmaps marked "no-substitution". */
-MDJVU_FUNCTION int32 mdjvu_classify_bitmaps_in_image
-    (mdjvu_image_t, int32 *result, mdjvu_matcher_options_t);
-
-#endif /* NO_MINIDJVU */
-
-#endif /* MDJVU_CLASSIFY_H */
+#define NO_MINIDJVU
+#define MDJVU_FUNCTION
+#define MDJVU_IMPLEMENT
+typedef int int32;
+#include "patterns.h"
+#include "classify.h" /* to compile it with the classificator */

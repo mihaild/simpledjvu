@@ -18,11 +18,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * 
+ *
  * minidjvu is derived from DjVuLibre (http://djvu.sourceforge.net)
  * All over DjVuLibre there is a patent alert from LizardTech
  * which I guess I should reproduce (don't ask me what does this mean):
- * 
+ *
  *  ------------------------------------------------------------------
  * | DjVu (r) Reference Library (v. 3.5)
  * | Copyright (c) 1999-2001 LizardTech, Inc. All Rights Reserved.
@@ -38,16 +38,16 @@
  * | The computer code originally released by LizardTech under this
  * | license and unmodified by other parties is deemed "the LIZARDTECH
  * | ORIGINAL CODE."  Subject to any third party intellectual property
- * | claims, LizardTech grants recipient a worldwide, royalty-free, 
- * | non-exclusive license to make, use, sell, or otherwise dispose of 
- * | the LIZARDTECH ORIGINAL CODE or of programs derived from the 
- * | LIZARDTECH ORIGINAL CODE in compliance with the terms of the GNU 
- * | General Public License.   This grant only confers the right to 
- * | infringe patent claims underlying the LIZARDTECH ORIGINAL CODE to 
- * | the extent such infringement is reasonably necessary to enable 
- * | recipient to make, have made, practice, sell, or otherwise dispose 
- * | of the LIZARDTECH ORIGINAL CODE (or portions thereof) and not to 
- * | any greater extent that may be necessary to utilize further 
+ * | claims, LizardTech grants recipient a worldwide, royalty-free,
+ * | non-exclusive license to make, use, sell, or otherwise dispose of
+ * | the LIZARDTECH ORIGINAL CODE or of programs derived from the
+ * | LIZARDTECH ORIGINAL CODE in compliance with the terms of the GNU
+ * | General Public License.   This grant only confers the right to
+ * | infringe patent claims underlying the LIZARDTECH ORIGINAL CODE to
+ * | the extent such infringement is reasonably necessary to enable
+ * | recipient to make, have made, practice, sell, or otherwise dispose
+ * | of the LIZARDTECH ORIGINAL CODE (or portions thereof) and not to
+ * | any greater extent that may be necessary to utilize further
  * | modifications or combinations.
  * |
  * | The LIZARDTECH ORIGINAL CODE is provided "AS IS" WITHOUT WARRANTY
@@ -152,64 +152,70 @@ static int donut_connectivity_test(byte *upper, byte *row, byte *lower)/*{{{*/
 
     switch(sum)
     {
-        case 3:/*{{{*/
+    case 3:/*{{{*/
+    {
+        int x = 6 - (u + (l << 1) + d + (d << 1));
+        switch(x)
         {
-            int x = 6 - (u + (l << 1) + d + (d << 1));
-            switch(x)
-            {
-                case 0: /* l */
-                    return upper[-1] && lower[-1] ? 0 : 1;
-                case 1: /* d */
-                    return lower[-1] && lower[1] ? 0 : 1;
-                case 2: /* r */
-                    return upper[1] && lower[1] ? 0 : 1;
-                case 3: /* u */
-                    return upper[-1] && upper[1] ? 0 : 1;
-                default: assert(0); return 0;
-            }
-        }
-        break;/*}}}*/
-        case 2:/*{{{*/
-        {
-            int s = l + r;
-            if (s & 1)
-            {
-                /*   A1.
-                 *   1 0 - should be !A (2x2 square extermination)
-                 *   .0.
-                 */
-                if (l)
-                {
-                    if (u)
-                        return upper[-1] ? 0 : 1;
-                    else
-                        return lower[-1] ? 0 : 1;
-                }
-                else /* r */
-                {
-                    if (u)
-                        return upper[1] ? 0 : 1;
-                    else
-                        return lower[1] ? 0 : 1;
-                }
-            }
-            else
-            {
-                /*   .0.
-                 *   1 1 - surely should be 1 to preserve connection
-                 *   .0.
-                 */
-                return 1;
-            }
-        }
-        break;/*}}}*/
-        case 0: case 4:
-            return 1;
-        case 1:
+        case 0: /* l */
+            return upper[-1] && lower[-1] ? 0 : 1;
+        case 1: /* d */
+            return lower[-1] && lower[1] ? 0 : 1;
+        case 2: /* r */
+            return upper[1] && lower[1] ? 0 : 1;
+        case 3: /* u */
+            return upper[-1] && upper[1] ? 0 : 1;
+        default:
+            assert(0);
             return 0;
-        default: assert(0); return 0;
+        }
     }
-    assert(0); return 0;
+        break;/*}}}*/
+    case 2:/*{{{*/
+    {
+        int s = l + r;
+        if (s & 1)
+        {
+            /*   A1.
+             *   1 0 - should be !A (2x2 square extermination)
+             *   .0.
+             */
+            if (l)
+            {
+                if (u)
+                    return upper[-1] ? 0 : 1;
+                else
+                    return lower[-1] ? 0 : 1;
+            }
+            else /* r */
+            {
+                if (u)
+                    return upper[1] ? 0 : 1;
+                else
+                    return lower[1] ? 0 : 1;
+            }
+        }
+        else
+        {
+            /*   .0.
+             *   1 1 - surely should be 1 to preserve connection
+             *   .0.
+             */
+            return 1;
+        }
+    }
+        break;/*}}}*/
+    case 0:
+    case 4:
+        return 1;
+    case 1:
+        return 0;
+    default:
+        assert(0);
+        return 0;
+    }
+    assert(0);
+    return 0;
 }/*}}}*/
 static byte donut_transform_pixel(byte *upper, byte *row, byte *lower)/*{{{*/
 {
@@ -249,63 +255,70 @@ static byte donut_transform_pixel(byte *upper, byte *row, byte *lower)/*{{{*/
 
     switch(sum)
     {
-        case 1: case 3:/*{{{*/
+    case 1:
+    case 3:/*{{{*/
+    {
+        int x = u + (l << 1) + d + (d << 1);
+        if (sum == 3) x = (6 - x) ^ 2;
+        switch(x)
         {
-            int x = u + (l << 1) + d + (d << 1);
-            if (sum == 3) x = (6 - x) ^ 2;
-            switch(x)
-            {
-                case 0: /* r */
-                    return upper[1] && lower[1] ? 0 : 1;
-                case 1: /* u */
-                    return upper[-1] && upper[1] ? 0 : 1;
-                case 2: /* l */
-                    return upper[-1] && lower[-1] ? 0 : 1;
-                case 3: /* d */
-                    return lower[-1] && lower[1] ? 0 : 1;
-                default: assert(0); return 0;
-            }
+        case 0: /* r */
+            return upper[1] && lower[1] ? 0 : 1;
+        case 1: /* u */
+            return upper[-1] && upper[1] ? 0 : 1;
+        case 2: /* l */
+            return upper[-1] && lower[-1] ? 0 : 1;
+        case 3: /* d */
+            return lower[-1] && lower[1] ? 0 : 1;
+        default:
+            assert(0);
+            return 0;
         }
-        break;/*}}}*/
-        case 2:/*{{{*/
-        {
-            int s = l + r;
-            if (s & 1)
-            {
-                /*   A1.
-                 *   1 0 - should be !A (2x2 square extermination)
-                 *   .0.
-                 */
-                if (l)
-                {
-                    if (u)
-                        return upper[-1] ? 0 : 1;
-                    else
-                        return lower[-1] ? 0 : 1;
-                }
-                else /* r */
-                {
-                    if (u)
-                        return upper[1] ? 0 : 1;
-                    else
-                        return lower[1] ? 0 : 1;
-                }
-            }
-            else
-            {
-                /*   .0.
-                 *   1 1 - surely should be 1 to preserve connection
-                 *   .0.
-                 */
-                return 1;
-            }
-        }
-        break;/*}}}*/
-        case 0: case 4:
-            return 1; /* lone pixels are NOT omitted */
-        default: assert(0); return 0;
     }
-    assert(0); return 0;
+        break;/*}}}*/
+    case 2:/*{{{*/
+    {
+        int s = l + r;
+        if (s & 1)
+        {
+            /*   A1.
+             *   1 0 - should be !A (2x2 square extermination)
+             *   .0.
+             */
+            if (l)
+            {
+                if (u)
+                    return upper[-1] ? 0 : 1;
+                else
+                    return lower[-1] ? 0 : 1;
+            }
+            else /* r */
+            {
+                if (u)
+                    return upper[1] ? 0 : 1;
+                else
+                    return lower[1] ? 0 : 1;
+            }
+        }
+        else
+        {
+            /*   .0.
+             *   1 1 - surely should be 1 to preserve connection
+             *   .0.
+             */
+            return 1;
+        }
+    }
+        break;/*}}}*/
+    case 0:
+    case 4:
+        return 1; /* lone pixels are NOT omitted */
+    default:
+        assert(0);
+        return 0;
+    }
+    assert(0);
+    return 0;
 }/*}}}*/
 
 /* `pixels' should have a margin of 1 pixel at each side
@@ -322,10 +335,10 @@ static int flay(byte **pixels, int w, int h, int rank, int **ranks)
     assert(h);
 
     for (i = 0; i < h; i++) for (j = 0; j < w; j++)
-    {
-        buf[w * i + j] =
-            donut_transform_pixel(pixels[i-1] + j, pixels[i] + j, pixels[i+1] + j);
-    }
+        {
+            buf[w * i + j] =
+                donut_transform_pixel(pixels[i-1] + j, pixels[i] + j, pixels[i+1] + j);
+        }
 
     for (i = 0; i < h; i++)
     {

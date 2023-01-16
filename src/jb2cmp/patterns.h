@@ -18,11 +18,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * 
+ *
  * minidjvu is derived from DjVuLibre (http://djvu.sourceforge.net)
  * All over DjVuLibre there is a patent alert from LizardTech
  * which I guess I should reproduce (don't ask me what does this mean):
- * 
+ *
  *  ------------------------------------------------------------------
  * | DjVu (r) Reference Library (v. 3.5)
  * | Copyright (c) 1999-2001 LizardTech, Inc. All Rights Reserved.
@@ -38,16 +38,16 @@
  * | The computer code originally released by LizardTech under this
  * | license and unmodified by other parties is deemed "the LIZARDTECH
  * | ORIGINAL CODE."  Subject to any third party intellectual property
- * | claims, LizardTech grants recipient a worldwide, royalty-free, 
- * | non-exclusive license to make, use, sell, or otherwise dispose of 
- * | the LIZARDTECH ORIGINAL CODE or of programs derived from the 
- * | LIZARDTECH ORIGINAL CODE in compliance with the terms of the GNU 
- * | General Public License.   This grant only confers the right to 
- * | infringe patent claims underlying the LIZARDTECH ORIGINAL CODE to 
- * | the extent such infringement is reasonably necessary to enable 
- * | recipient to make, have made, practice, sell, or otherwise dispose 
- * | of the LIZARDTECH ORIGINAL CODE (or portions thereof) and not to 
- * | any greater extent that may be necessary to utilize further 
+ * | claims, LizardTech grants recipient a worldwide, royalty-free,
+ * | non-exclusive license to make, use, sell, or otherwise dispose of
+ * | the LIZARDTECH ORIGINAL CODE or of programs derived from the
+ * | LIZARDTECH ORIGINAL CODE in compliance with the terms of the GNU
+ * | General Public License.   This grant only confers the right to
+ * | infringe patent claims underlying the LIZARDTECH ORIGINAL CODE to
+ * | the extent such infringement is reasonably necessary to enable
+ * | recipient to make, have made, practice, sell, or otherwise dispose
+ * | of the LIZARDTECH ORIGINAL CODE (or portions thereof) and not to
+ * | any greater extent that may be necessary to utilize further
  * | modifications or combinations.
  * |
  * | The LIZARDTECH ORIGINAL CODE is provided "AS IS" WITHOUT WARRANTY
@@ -82,7 +82,7 @@ MDJVU_FUNCTION mdjvu_pattern_t mdjvu_pattern_create(mdjvu_bitmap_t);
  */
 
 MDJVU_FUNCTION mdjvu_pattern_t mdjvu_pattern_create_from_array
-    (unsigned char **, int32 w, int32 h);
+(unsigned char **, int32 w, int32 h);
 
 
 /* Destroy the pattern. */
@@ -118,7 +118,7 @@ MDJVU_FUNCTION int mdjvu_match_patterns(mdjvu_pattern_t, mdjvu_pattern_t,
 
 /* `result' and `pixels' may be the same array */
 MDJVU_FUNCTION void mdjvu_soften_pattern(unsigned char **result,
-    unsigned char **pixels, int32 w, int32 h);
+        unsigned char **pixels, int32 w, int32 h);
 
 MDJVU_FUNCTION void mdjvu_get_gray_signature(
     unsigned char **data, int32 w, int32 h,

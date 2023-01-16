@@ -18,11 +18,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * 
+ *
  * minidjvu is derived from DjVuLibre (http://djvu.sourceforge.net)
  * All over DjVuLibre there is a patent alert from LizardTech
  * which I guess I should reproduce (don't ask me what does this mean):
- * 
+ *
  *  ------------------------------------------------------------------
  * | DjVu (r) Reference Library (v. 3.5)
  * | Copyright (c) 1999-2001 LizardTech, Inc. All Rights Reserved.
@@ -38,16 +38,16 @@
  * | The computer code originally released by LizardTech under this
  * | license and unmodified by other parties is deemed "the LIZARDTECH
  * | ORIGINAL CODE."  Subject to any third party intellectual property
- * | claims, LizardTech grants recipient a worldwide, royalty-free, 
- * | non-exclusive license to make, use, sell, or otherwise dispose of 
- * | the LIZARDTECH ORIGINAL CODE or of programs derived from the 
- * | LIZARDTECH ORIGINAL CODE in compliance with the terms of the GNU 
- * | General Public License.   This grant only confers the right to 
- * | infringe patent claims underlying the LIZARDTECH ORIGINAL CODE to 
- * | the extent such infringement is reasonably necessary to enable 
- * | recipient to make, have made, practice, sell, or otherwise dispose 
- * | of the LIZARDTECH ORIGINAL CODE (or portions thereof) and not to 
- * | any greater extent that may be necessary to utilize further 
+ * | claims, LizardTech grants recipient a worldwide, royalty-free,
+ * | non-exclusive license to make, use, sell, or otherwise dispose of
+ * | the LIZARDTECH ORIGINAL CODE or of programs derived from the
+ * | LIZARDTECH ORIGINAL CODE in compliance with the terms of the GNU
+ * | General Public License.   This grant only confers the right to
+ * | infringe patent claims underlying the LIZARDTECH ORIGINAL CODE to
+ * | the extent such infringement is reasonably necessary to enable
+ * | recipient to make, have made, practice, sell, or otherwise dispose
+ * | of the LIZARDTECH ORIGINAL CODE (or portions thereof) and not to
+ * | any greater extent that may be necessary to utilize further
  * | modifications or combinations.
  * |
  * | The LIZARDTECH ORIGINAL CODE is provided "AS IS" WITHOUT WARRANTY
@@ -151,8 +151,8 @@ static void make_hcut(int32 a, int32 l, int32 w, int32 h,
         cut--;
         up_weight -= last_row_weight;
         sig[k] = (byte) ((256 *
-                    (cut * w + w * ((a >> 1) - up_weight) / last_row_weight))
-                 / (w * h));
+                          (cut * w + w * ((a >> 1) - up_weight) / last_row_weight))
+                         / (w * h));
         if (a - (up_weight << 1) > last_row_weight)
         {
             cut++;
@@ -195,11 +195,12 @@ static void make_vcut(int32 a, int32 l, int32 w, int32 h,
         cut--;
         left_weight -= last_col_weight;
         sig[k] = (byte) ((256 *
-                    (cut * h + h * ((a >> 1) - left_weight) / last_col_weight))
-                 / (w * h));
+                          (cut * h + h * ((a >> 1) - left_weight) / last_col_weight))
+                         / (w * h));
         if (a - (left_weight << 1) > last_col_weight)
         {
-            cut++; left_weight += last_col_weight;
+            cut++;
+            left_weight += last_col_weight;
         }
     }
     else
@@ -213,9 +214,9 @@ static void make_vcut(int32 a, int32 l, int32 w, int32 h,
 }
 
 static void get_signature(int32 width, int32 height, byte **pixels, byte *sig,
-            int32 s_row(byte *, int32, int32),
-            int32 s_col(byte **, int32, int32, int32),
-            int32 size)
+                          int32 s_row(byte *, int32, int32),
+                          int32 s_col(byte **, int32, int32, int32),
+                          int32 size)
 {
     int32 area = 0, i;
     for (i = 0; i < height; i++)
@@ -227,14 +228,14 @@ static void get_signature(int32 width, int32 height, byte **pixels, byte *sig,
 }
 
 MDJVU_IMPLEMENT void mdjvu_get_gray_signature(byte **data, int32 w, int32 h,
-                                              byte *result, int32 size)
+        byte *result, int32 size)
 {
     get_signature(w, h, data, result, sum_row_gray, sum_column_gray, size);
 }
 
 MDJVU_IMPLEMENT void mdjvu_get_black_and_white_signature
-                                        (byte **data, int32 w, int32 h,
-                                              byte *result, int32 size)
+(byte **data, int32 w, int32 h,
+ byte *result, int32 size)
 {
     get_signature(w, h, data, result, sum_row_black_and_white, sum_column_black_and_white, size);
 }

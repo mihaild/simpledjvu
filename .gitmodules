@@ -1,0 +1,3 @@
+[submodule "src/djvulibre"]
+	path = src/djvulibre
+	url = https://github.com/barak/djvulibre

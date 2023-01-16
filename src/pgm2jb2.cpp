@@ -14,7 +14,7 @@
 //C- but WITHOUT ANY WARRANTY; without even the implied warranty of
 //C- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //C- GNU General Public License for more details.
-//C- 
+//C-
 //C- DjVuLibre-3.5 is derived from the DjVu(r) Reference Library from
 //C- Lizardtech Software.  Lizardtech Software has authorized us to
 //C- replace the original DjVu(r) Reference Library notice by the following
@@ -35,16 +35,16 @@
 //C- | The computer code originally released by LizardTech under this
 //C- | license and unmodified by other parties is deemed "the LIZARDTECH
 //C- | ORIGINAL CODE."  Subject to any third party intellectual property
-//C- | claims, LizardTech grants recipient a worldwide, royalty-free, 
-//C- | non-exclusive license to make, use, sell, or otherwise dispose of 
-//C- | the LIZARDTECH ORIGINAL CODE or of programs derived from the 
-//C- | LIZARDTECH ORIGINAL CODE in compliance with the terms of the GNU 
-//C- | General Public License.   This grant only confers the right to 
-//C- | infringe patent claims underlying the LIZARDTECH ORIGINAL CODE to 
-//C- | the extent such infringement is reasonably necessary to enable 
-//C- | recipient to make, have made, practice, sell, or otherwise dispose 
-//C- | of the LIZARDTECH ORIGINAL CODE (or portions thereof) and not to 
-//C- | any greater extent that may be necessary to utilize further 
+//C- | claims, LizardTech grants recipient a worldwide, royalty-free,
+//C- | non-exclusive license to make, use, sell, or otherwise dispose of
+//C- | the LIZARDTECH ORIGINAL CODE or of programs derived from the
+//C- | LIZARDTECH ORIGINAL CODE in compliance with the terms of the GNU
+//C- | General Public License.   This grant only confers the right to
+//C- | infringe patent claims underlying the LIZARDTECH ORIGINAL CODE to
+//C- | the extent such infringement is reasonably necessary to enable
+//C- | recipient to make, have made, practice, sell, or otherwise dispose
+//C- | of the LIZARDTECH ORIGINAL CODE (or portions thereof) and not to
+//C- | any greater extent that may be necessary to utilize further
 //C- | modifications or combinations.
 //C- |
 //C- | The LIZARDTECH ORIGINAL CODE is provided "AS IS" WITHOUT WARRANTY
@@ -124,20 +124,20 @@
 #undef MIN
 #endif
 
-    inline int 
-MIN(int a, int b) 
-{ 
-    return ( a<b ?a :b); 
+inline int
+MIN(int a, int b)
+{
+    return ( a<b ?a :b);
 }
 
 #ifdef MAX
 #undef MAX
 #endif
 
-    inline int 
-MAX(int a, int b) 
-{ 
-    return ( a>b ?a :b); 
+inline int
+MAX(int a, int b)
+{
+    return ( a>b ?a :b);
 }
 
 
@@ -150,8 +150,8 @@ MAX(int a, int b)
 // --------------------------------------------------
 
 // -- A run of black pixels
-struct Run    
-{ 
+struct Run
+{
     int y;         // vertical coordinate
     short x1;      // first horizontal coordinate
     short x2;      // last horizontal coordinate
@@ -159,7 +159,7 @@ struct Run
 };
 
 // -- A component descriptor
-struct CC    
+struct CC
 {
     GRect bb;      // bounding box
     int npix;      // number of black pixels
@@ -169,33 +169,33 @@ struct CC
 
 
 // -- An image composed of runs
-class CCImage 
+class CCImage
 {
-    public:
-        int height;            // Height of the image in pixels
-        int width;             // Width of the image in pixels
-        GTArray<Run> runs;     // array of runs
-        GTArray<CC>  ccs;      // Array of component descriptors
-        int nregularccs;       // Number of regular ccs (set by merge_and_split_ccs)
-        int largesize;         // CCs larger than that are special
-        int smallsize;         // CCs smaller than that are special 
-        int tinysize;          // CCs smaller than that may be removed 
-        CCImage();
-        void init(int width, int height, int dpi);
-        void add_single_run(int y, int x1, int x2, int ccid=0);
-        void add_bitmap_runs(const GBitmap &bm, int offx=0, int offy=0, int ccid=0);
-        GP<GBitmap> get_bitmap_for_cc(int ccid) const;
-        GP<JB2Image> get_jb2image() const;
-        void make_ccids_by_analysis();
-        void make_ccs_from_ccids();
-        void erase_tiny_ccs();
-        void merge_and_split_ccs();
-        void sort_in_reading_order(); 
+public:
+    int height;            // Height of the image in pixels
+    int width;             // Width of the image in pixels
+    GTArray<Run> runs;     // array of runs
+    GTArray<CC>  ccs;      // Array of component descriptors
+    int nregularccs;       // Number of regular ccs (set by merge_and_split_ccs)
+    int largesize;         // CCs larger than that are special
+    int smallsize;         // CCs smaller than that are special
+    int tinysize;          // CCs smaller than that may be removed
+    CCImage();
+    void init(int width, int height, int dpi);
+    void add_single_run(int y, int x1, int x2, int ccid=0);
+    void add_bitmap_runs(const GBitmap &bm, int offx=0, int offy=0, int ccid=0);
+    GP<GBitmap> get_bitmap_for_cc(int ccid) const;
+    GP<JB2Image> get_jb2image() const;
+    void make_ccids_by_analysis();
+    void make_ccs_from_ccids();
+    void erase_tiny_ccs();
+    void merge_and_split_ccs();
+    void sort_in_reading_order();
 };
 
 
 // -- Compares runs
-    static inline bool
+static inline bool
 operator <= (const Run &a, const Run &b)
 {
     return (a.y<b.y) || (a.y==b.y && a.x1<=b.x1);
@@ -203,12 +203,12 @@ operator <= (const Run &a, const Run &b)
 
 
 // -- Constructs CCImage and provide defaults
-    CCImage::CCImage()
-: height(0), width(0), nregularccs(0)
+CCImage::CCImage()
+    : height(0), width(0), nregularccs(0)
 {
 }
 
-    void
+void
 CCImage::init(int w, int h, int dpi)
 {
     runs.empty();
@@ -224,7 +224,7 @@ CCImage::init(int w, int h, int dpi)
 
 
 // -- Adds a run to the CCImage
-    inline void 
+inline void
 CCImage::add_single_run(int y, int x1, int x2, int ccid)
 {
     int index = runs.hbound();
@@ -238,7 +238,7 @@ CCImage::add_single_run(int y, int x1, int x2, int ccid)
 
 
 // -- Adds runs extracted from a bitmap
-    void 
+void
 CCImage::add_bitmap_runs(const GBitmap &bm, int offx, int offy, int ccid)
 {
     // Iterate over rows
@@ -263,7 +263,7 @@ CCImage::add_bitmap_runs(const GBitmap &bm, int offx, int offy, int ccid)
 
 
 // -- Performs connected component analysis
-    void
+void
 CCImage::make_ccids_by_analysis()
 {
     // Sort runs
@@ -279,8 +279,8 @@ CCImage::make_ccids_by_analysis()
         int x2 = runs[n].x2 + 1;
         int id = (umap.hbound() + 1);
         // iterate over previous line runs
-        for(;runs[p].y < y-1;p++);
-        for(;(runs[p].y < y) && (runs[p].x1 <= x2);p++ )
+        for(; runs[p].y < y-1; p++);
+        for(; (runs[p].y < y) && (runs[p].x1 <= x2); p++ )
         {
             if ( runs[p].x2 >= x1 )
             {
@@ -288,11 +288,16 @@ CCImage::make_ccids_by_analysis()
                 int oid = runs[p].ccid;
                 while (umap[oid] < oid)
                     oid = umap[oid];
-                if ((int)id > umap.hbound()) {
+                if ((int)id > umap.hbound())
+                {
                     id = oid;
-                } else if (id < oid) {
+                }
+                else if (id < oid)
+                {
                     umap[oid] = id;
-                } else {
+                }
+                else
+                {
                     umap[id] = oid;
                     id = oid;
                 }
@@ -327,7 +332,7 @@ CCImage::make_ccids_by_analysis()
 
 
 // -- Constructs the ``ccs'' array from run's ccids.
-    void
+void
 CCImage::make_ccs_from_ccids()
 {
     int n;
@@ -337,7 +342,7 @@ CCImage::make_ccs_from_ccids()
     for (n=0; n<=runs.hbound(); n++)
         if (pruns[n].ccid > maxccid)
             maxccid = runs[n].ccid;
-    // Renumber ccs 
+    // Renumber ccs
     GTArray<int> armap(0,maxccid);
     int *rmap = armap;
     for (n=0; n<=maxccid; n++)
@@ -375,7 +380,7 @@ CCImage::make_ccs_from_ccids()
 
     // Compute positions for runs of cc
     int frun = 0;
-    for (n=0; n<nid; n++) 
+    for (n=0; n<nid; n++)
     {
         ccs[n].frun = rmap[n] = frun;
         frun += ccs[n].nrun;
@@ -424,7 +429,7 @@ CCImage::make_ccs_from_ccids()
 
 
 // Removes ccs which are too small.
-    void
+void
 CCImage::erase_tiny_ccs()
 {
     // ISSUE: HALFTONE DETECTION
@@ -447,7 +452,7 @@ CCImage::erase_tiny_ccs()
 
 
 // -- Merges small ccs and split large ccs
-    void
+void
 CCImage::merge_and_split_ccs()
 {
     int ncc = ccs.size();
@@ -491,7 +496,7 @@ CCImage::merge_and_split_ccs()
                 }
                 else // gridj_span>0
                 {
-                    // truncate the current run 
+                    // truncate the current run
                     r.ccid = newccid++;
                     int x = (gridj_start+1)*splitsize;
                     r.x2 = x-1;
@@ -511,7 +516,7 @@ CCImage::merge_and_split_ccs()
                     newrun.y = y;
                     newrun.x1 = x;
                     newrun.x2 = x_end;
-                    newrun.ccid = newccid++;                      
+                    newrun.ccid = newccid++;
                 }
             }
         }
@@ -522,7 +527,7 @@ CCImage::merge_and_split_ccs()
 
 
 // -- Helps sorting cc
-    static int 
+static int
 top_edges_descending (const void *pa, const void *pb)
 {
     if (((CC*) pa)->bb.ymax != ((CC*) pb)->bb.ymax)
@@ -534,7 +539,7 @@ top_edges_descending (const void *pa, const void *pb)
 
 
 // -- Helps sorting cc
-    static int 
+static int
 left_edges_ascending (const void *pa, const void *pb)
 {
     if (((CC*) pa)->bb.xmin != ((CC*) pb)->bb.xmin)
@@ -546,7 +551,7 @@ left_edges_ascending (const void *pa, const void *pb)
 
 
 // -- Helps sorting cc
-    static int 
+static int
 integer_ascending (const void *pa, const void *pb)
 {
     return ( *(int*)pb - *(int*)pa );
@@ -554,7 +559,7 @@ integer_ascending (const void *pa, const void *pb)
 
 
 // -- Sort ccs in approximate reading order
-    void 
+void
 CCImage::sort_in_reading_order()
 {
     if (nregularccs<2) return;
@@ -568,7 +573,7 @@ CCImage::sort_in_reading_order()
     // Subdivide the ccarray list roughly into text lines [LYB]
     // - Determine maximal top deviation
     int maxtopchange = width / 40;
-    if (maxtopchange < 32) 
+    if (maxtopchange < 32)
         maxtopchange = 32;
     // - Loop until processing all ccs
     int ccno = 0;
@@ -619,7 +624,7 @@ CCImage::sort_in_reading_order()
 
 
 // -- Creates a bitmap for a particular component
-GP<GBitmap>   
+GP<GBitmap>
 CCImage::get_bitmap_for_cc(const int ccid) const
 {
     const CC &cc = ccs[ccid];
@@ -641,7 +646,7 @@ CCImage::get_bitmap_for_cc(const int ccid) const
 
 
 // -- Creates a JB2Image with the remaining components
-GP<JB2Image> 
+GP<JB2Image>
 CCImage::get_jb2image() const
 {
     GP<JB2Image> jimg = JB2Image::create();
@@ -670,15 +675,17 @@ CCImage::get_jb2image() const
     return jimg;
 }
 
-GP<JB2Image> pbm2jb2(const GP<GBitmap> &image, int losslevel = 0, int dpi = 300) {
+GP<JB2Image> pbm2jb2(const GP<GBitmap> &image, int losslevel = 0, int dpi = 300)
+{
     CCImage rimg;
     rimg.init(image->columns(), image->rows(), dpi);
-    rimg.add_bitmap_runs(*image); 
+    rimg.add_bitmap_runs(*image);
     // Component analysis
     rimg.make_ccids_by_analysis(); // obtain ccids
     rimg.make_ccs_from_ccids();    // compute cc descriptors
 
-    if (losslevel > 0) {
+    if (losslevel > 0)
+    {
         rimg.erase_tiny_ccs();       // clean
     }
     rimg.merge_and_split_ccs();    // reorganize weird ccs

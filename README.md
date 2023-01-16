@@ -5,19 +5,33 @@ It uses [djvulibre](http://djvu.sourceforge.net/) for all technichal work and co
 Really, the only one thing that it does itself is splitting the image to mask, background and foreground.
 
 ## Install
-I am too stupid to understand, how does autoconf and other such tools work, so you have to change Makefile manually.
 
-In usual case, set DJVULIBRE_PATH to right value is enough.
-May be, you will need to change CXXFLAGS - just look with which flags djvulibre compiles on your machine and copy them.
+I am too stupid to understand, how does autoconf and other such tools work, so you have to change `Makefile` manually.
+
+### load submodules
+
+submodules:
+
+- [djvulibre](https://github.com/barak/djvulibre) -> [src](src)
+
+```shell
+$ git submodule init
+$ git submodule update
+```
+
+### build
 
 After it, just say `make` in project directory.
 
 If you want, you can change your PATH variable or copy **simpledjvu** binary to any directory already included in your PATH.
 
-You need g++ version supports c++0x standard flag.
+You need `g++` version supports `c++0x` standard flag.
 
 ## Usage
-`simpledjvu [options] **input.pgm** **output.djvu**`
+
+```shell
+simpledjvu [options] input.pgm output.djvu
+```
 
 where options =
 
@@ -26,6 +40,8 @@ where options =
 **-nofg** Do not include foreground in djvu output.
 
 **-mask_mul n** Multiplicate mask size n times.
+
+**-dpi n** DPI output djvu.
 
 **-use_normalized** Use normalized image (in which "almost black" and "almost white" colors are exactly black and white) for background and foreground except of original.
 
@@ -39,9 +55,10 @@ where options =
 
 **-slices_fg n1,n2,...** Use *n1,n2,...* as number of slices for c44 for foreground.
 
-You can use imagemagick or any other similar tool to obtain pgm from other format.
+You can use [Netpbm](https://sourceforge.net/projects/netpbm/) or any other similar tool to obtain `pgm` from other format.
 
 ## Algorithm description.
+
 Algorithm is very simple, but it gives surprisingly good result for non-pathological images.
 As usual, background and foreground are really white and black parts, not paper and letters.
 
@@ -51,4 +68,4 @@ Increase this images to original image size, and change the image: make absolute
 
 Now we repeat this step many times, and result converges to almost black-and-white image, so we can do simple threshold to obtain the mask.
 
-We use c44 for partially masked images using blurred mask for background, and blurred inverted mask for foreground.
+We use `c44` for partially masked images using blurred mask for background, and blurred inverted mask for foreground.

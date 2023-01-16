@@ -18,11 +18,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * 
+ *
  * minidjvu is derived from DjVuLibre (http://djvu.sourceforge.net)
  * All over DjVuLibre there is a patent alert from LizardTech
  * which I guess I should reproduce (don't ask me what does this mean):
- * 
+ *
  *  ------------------------------------------------------------------
  * | DjVu (r) Reference Library (v. 3.5)
  * | Copyright (c) 1999-2001 LizardTech, Inc. All Rights Reserved.
@@ -38,16 +38,16 @@
  * | The computer code originally released by LizardTech under this
  * | license and unmodified by other parties is deemed "the LIZARDTECH
  * | ORIGINAL CODE."  Subject to any third party intellectual property
- * | claims, LizardTech grants recipient a worldwide, royalty-free, 
- * | non-exclusive license to make, use, sell, or otherwise dispose of 
- * | the LIZARDTECH ORIGINAL CODE or of programs derived from the 
- * | LIZARDTECH ORIGINAL CODE in compliance with the terms of the GNU 
- * | General Public License.   This grant only confers the right to 
- * | infringe patent claims underlying the LIZARDTECH ORIGINAL CODE to 
- * | the extent such infringement is reasonably necessary to enable 
- * | recipient to make, have made, practice, sell, or otherwise dispose 
- * | of the LIZARDTECH ORIGINAL CODE (or portions thereof) and not to 
- * | any greater extent that may be necessary to utilize further 
+ * | claims, LizardTech grants recipient a worldwide, royalty-free,
+ * | non-exclusive license to make, use, sell, or otherwise dispose of
+ * | the LIZARDTECH ORIGINAL CODE or of programs derived from the
+ * | LIZARDTECH ORIGINAL CODE in compliance with the terms of the GNU
+ * | General Public License.   This grant only confers the right to
+ * | infringe patent claims underlying the LIZARDTECH ORIGINAL CODE to
+ * | the extent such infringement is reasonably necessary to enable
+ * | recipient to make, have made, practice, sell, or otherwise dispose
+ * | of the LIZARDTECH ORIGINAL CODE (or portions thereof) and not to
+ * | any greater extent that may be necessary to utilize further
  * | modifications or combinations.
  * |
  * | The LIZARDTECH ORIGINAL CODE is provided "AS IS" WITHOUT WARRANTY
@@ -230,9 +230,9 @@ static int simple_tests(Image *i1, Image *i2)
  * Code needs some clarification, yes...
  */
 static int32 distance_by_pixeldiff_functions_by_shift(Image *i1, Image *i2,
-    int32 (*compare_row)(byte *, byte *, int32),
-    int32 (*compare_with_white)(byte *, int32), int32 ceiling,
-    int32 shift_x, int32 shift_y) /* of i1's coordinate system with respect to i2 */
+        int32 (*compare_row)(byte *, byte *, int32),
+        int32 (*compare_with_white)(byte *, int32), int32 ceiling,
+        int32 shift_x, int32 shift_y) /* of i1's coordinate system with respect to i2 */
 {
     int32 w1 = i1->width, w2 = i2->width, h1 = i1->height, h2 = i2->height;
     int32 min_y = shift_y < 0 ? shift_y : 0;
@@ -282,14 +282,14 @@ static int32 distance_by_pixeldiff_functions_by_shift(Image *i1, Image *i2,
             if (max_overlap_x_plus_1 < w2)
             {
                 score += compare_with_white(
-                    i2->pixels[i] + max_overlap_x_plus_1,
-                    w2 - max_overlap_x_plus_1);
+                             i2->pixels[i] + max_overlap_x_plus_1,
+                             w2 - max_overlap_x_plus_1);
             }
             else
             {
                 score += compare_with_white(
-                     i1->pixels[y1] + max_overlap_x_plus_1_for_i1,
-                     w1 - max_overlap_x_plus_1_for_i1);
+                             i1->pixels[y1] + max_overlap_x_plus_1_for_i1,
+                             w1 - max_overlap_x_plus_1_for_i1);
 
             }
         }
@@ -300,8 +300,8 @@ static int32 distance_by_pixeldiff_functions_by_shift(Image *i1, Image *i2,
 }
 
 static int32 distance_by_pixeldiff_functions(Image *i1, Image *i2,
-    int32 (*compare_row)(byte *, byte *, int32),
-    int32 (*compare_with_white)(byte *, int32), int32 ceiling)
+        int32 (*compare_row)(byte *, byte *, int32),
+        int32 (*compare_with_white)(byte *, int32), int32 ceiling)
 {
     int32 w1, w2, h1, h2;
     int32 shift_x, shift_y; /* of i1's coordinate system with respect to i2 */
@@ -314,8 +314,10 @@ static int32 distance_by_pixeldiff_functions(Image *i1, Image *i2,
         i2 = img;
     }
 
-    w1 = i1->width; h1 = i1->height;
-    w2 = i2->width; h2 = i2->height; 
+    w1 = i1->width;
+    h1 = i1->height;
+    w2 = i2->width;
+    h2 = i2->height;
 
     /* (shift_x, shift_y) */
     /*     is what should be added to i1's coordinates to get i2's coordinates. */
@@ -335,7 +337,7 @@ static int32 distance_by_pixeldiff_functions(Image *i1, Image *i2,
         shift_y = (shift_y + MASS_CENTER_QUANT / 2) / MASS_CENTER_QUANT;
 
     return distance_by_pixeldiff_functions_by_shift(
-        i1, i2, compare_row, compare_with_white, ceiling, shift_x, shift_y);
+               i1, i2, compare_row, compare_with_white, ceiling, shift_x, shift_y);
 }
 
 #endif
@@ -378,7 +380,7 @@ static int32 pithdiff_compare_with_white(byte *row, int32 n)
 static int32 pithdiff_distance(Image *i1, Image *i2, int32 ceiling)
 {
     return distance_by_pixeldiff_functions(i1, i2,
-            &pithdiff_compare_row, &pithdiff_compare_with_white, ceiling);
+                                           &pithdiff_compare_row, &pithdiff_compare_with_white, ceiling);
 }
 
 static int pithdiff_equivalence(Image *i1, Image *i2, double threshold, int32 dpi)
@@ -427,7 +429,7 @@ static int32 softdiff_compare_with_white(byte *row, int32 n)
 static int32 softdiff_distance(Image *i1, Image *i2, int32 ceiling)
 {
     return distance_by_pixeldiff_functions(i1, i2,
-            &softdiff_compare_row, &softdiff_compare_with_white, ceiling);
+                                           &softdiff_compare_row, &softdiff_compare_with_white, ceiling);
 }
 
 static int softdiff_equivalence(Image *i1, Image *i2, double threshold, int32 dpi)
@@ -491,7 +493,7 @@ mdjvu_pattern_t mdjvu_pattern_create(mdjvu_bitmap_t bitmap)
 /* Finding mass center {{{ */
 
 static void get_mass_center(unsigned char **pixels, int32 w, int32 h,
-                     int32 *pmass_center_x, int32 *pmass_center_y)
+                            int32 *pmass_center_x, int32 *pmass_center_y)
 {
     double x_sum = 0, y_sum = 0, mass = 0;
     int32 i, j;
@@ -562,44 +564,44 @@ static int compare_patterns(mdjvu_pattern_t ptr1, mdjvu_pattern_t ptr2,/*{{{*/
 
     if (simple_tests(i1, i2)) return -1;
 
-    #if USE_SHIFTDIFF_1
-        i = shiftdiff_equivalence(i1->signature, i2->signature,
-            shiftdiff1_falloff, shiftdiff1_veto_threshold, opt->shiftdiff1_threshold);
-        if (i == -1) return -1;
-        state |= i;
-    #endif
+#if USE_SHIFTDIFF_1
+    i = shiftdiff_equivalence(i1->signature, i2->signature,
+                              shiftdiff1_falloff, shiftdiff1_veto_threshold, opt->shiftdiff1_threshold);
+    if (i == -1) return -1;
+    state |= i;
+#endif
 
-    #if USE_SHIFTDIFF_2
-        i = shiftdiff_equivalence(i1->signature2, i2->signature2,
-            shiftdiff2_falloff, shiftdiff2_veto_threshold, opt->shiftdiff2_threshold);
-        if (i == -1) return -1;
-        state |= i;
-    #endif
+#if USE_SHIFTDIFF_2
+    i = shiftdiff_equivalence(i1->signature2, i2->signature2,
+                              shiftdiff2_falloff, shiftdiff2_veto_threshold, opt->shiftdiff2_threshold);
+    if (i == -1) return -1;
+    state |= i;
+#endif
 
-    #if USE_SHIFTDIFF_3
-        i = shiftdiff_equivalence(i1->signature, i2->signature,
-            shiftdiff3_falloff, shiftdiff3_veto_threshold, opt->shiftdiff3_threshold);
-        if (i == -1) return -1;
-        state |= i;
-    #endif
+#if USE_SHIFTDIFF_3
+    i = shiftdiff_equivalence(i1->signature, i2->signature,
+                              shiftdiff3_falloff, shiftdiff3_veto_threshold, opt->shiftdiff3_threshold);
+    if (i == -1) return -1;
+    state |= i;
+#endif
 
-    #if USE_PITHDIFF
-        i = pithdiff_equivalence(i1, i2, opt->pithdiff_threshold, dpi);
-        if (i == -1) return 0; /* pithdiff has no right to veto at upper level */
-        state |= i;
-    #endif
+#if USE_PITHDIFF
+    i = pithdiff_equivalence(i1, i2, opt->pithdiff_threshold, dpi);
+    if (i == -1) return 0; /* pithdiff has no right to veto at upper level */
+    state |= i;
+#endif
 
-    #if USE_SOFTDIFF
-        i = softdiff_equivalence(i1, i2, opt->softdiff_threshold, dpi);
-        if (i == -1) return 0;  /* softdiff has no right to veto at upper level */
-        state |= i;
-    #endif
+#if USE_SOFTDIFF
+    i = softdiff_equivalence(i1, i2, opt->softdiff_threshold, dpi);
+    if (i == -1) return 0;  /* softdiff has no right to veto at upper level */
+    state |= i;
+#endif
 
     return state;
 }/*}}}*/
 
 MDJVU_IMPLEMENT int mdjvu_match_patterns(mdjvu_pattern_t ptr1, mdjvu_pattern_t ptr2,
-                    int32 dpi, mdjvu_matcher_options_t options)
+        int32 dpi, mdjvu_matcher_options_t options)
 {
     Options *opt;
     int result;
