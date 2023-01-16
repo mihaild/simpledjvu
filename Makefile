@@ -39,7 +39,7 @@ get_pgm_diff: $(OBJ_FILE_PGM)
 	$(LN) $^ $(LDFLAGS) -o $@
 
 %.o: %.cpp
-	$(CC) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 src/jb2cmp/libjb2cmp.a: 
 	cd src/jb2cmp && ${MAKE}
