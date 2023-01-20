@@ -17,31 +17,42 @@
 #You should have received a copy of the GNU General Public License
 #along with Simpledjvu.  If not, see <http://www.gnu.org/licenses/>.
 
+PROJECT = simpledjvu
+DJVULIBRE_PATH = src/djvulibre
+CXX = g++ -O3 -std=c++0x
+INCLUDES = -I$(DJVULIBRE_PATH) -I$(DJVULIBRE_PATH)/libdjvu -I$(DJVULIBRE_PATH)/tools -Isrc
+CXXFLAGS = $(INCLUDES) -DHAVE_CONFIG_H -pthread -DTHREADMODEL=POSIXTHREADS
+LDFLAGS = -ldjvulibre
+LN = $(CXX) -DHAVE_CONFIG_H
+RM = rm -f
 
-DJVULIBRE_PATH = /home/mihaild/djvulibre
-CC = g++ -O3 -std=c++0x -MMD
-INCLUDES=-I$(DJVULIBRE_PATH) -I$(DJVULIBRE_PATH)/libdjvu -I$(DJVULIBRE_PATH)/tools -I.
-CXXFLAGS=$(INCLUDES) -DHAVE_CONFIG_H -pthread -DTHREADMODEL=POSIXTHREADS
-LINK=g++ -O3
+OBJ_FILES = \
+            src/hystogram_splitter.o \
+            src/normalize.o \
+            src/pgm2jb2.o \
+            src/djvulibre/tools/jb2tune.o \
+            src/djvulibre/tools/jb2cmp/classify.o \
+            src/djvulibre/tools/jb2cmp/cuts.o \
+            src/djvulibre/tools/jb2cmp/frames.o \
+            src/djvulibre/tools/jb2cmp/patterns.o \
+            src/simpledjvu.o
+OBJ_FILE_PGM = src/get_pgm_diff.o
+BIN_FILES = $(PROJECT) get_pgm_diff
 
-BIN_FILES = simpledjvu get_pgm_diff
+all: djvulibre_config $(BIN_FILES)
 
-all: $(BIN_FILES)
+$(PROJECT): $(OBJ_FILES)
+	$(LN) $^ $(LDFLAGS) -o $@
 
-simpledjvu: build/simpledjvu.o build/hystogram_splitter.o build/normalize.o build/pgm2jb2.o build/jb2tune.o jb2cmp/libjb2cmp.a
-	$(LINK) -o simpledjvu $^ -DHAVE_CONFIG_H -ldjvulibre
+get_pgm_diff: $(OBJ_FILE_PGM)
+	$(LN) $^ $(LDFLAGS) -o $@
 
-get_pgm_diff: build/get_pgm_diff.o
-	$(LINK) -o get_pgm_diff $^ -DHAVE_CONFIG_H -ldjvulibre
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-build/%.o build/%.d: %.cpp
-	$(CC) $(CXXFLAGS) -c -o build/$*.o $*.cpp
-
-jb2cmp/libjb2cmp.a: 
-	cd jb2cmp && ${MAKE}
+djvulibre_config:
+	cd src/djvulibre && ./autogen.sh
 
 clean:
-	rm -f build/* $(BIN_FILES)
-	cd jb2cmp && ${MAKE} clean
-
--include $(wildcard build/*.d)
+	$(RM) $(OBJ_FILES) $(OBJ_FILE_PGM) $(BIN_FILES)
+	cd src/jb2cmp && ${MAKE} clean
